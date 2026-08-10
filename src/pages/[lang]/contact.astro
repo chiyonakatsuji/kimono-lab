@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { useTranslations, languages, type Lang } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+// NOT YET CONNECTED. A static site cannot send email on its own; this form
+// needs a form service (Formspree / Cloudflare Worker / Netlify Forms) before
+// it will do anything. Until then FORM_ENDPOINT stays null and the page shows
+// an email address instead, so no message can be silently lost.
+const FORM_ENDPOINT: string | null = null;
+
+// TODO: replace with the atelier's real address before launch.
+const EMAIL = 'hello@example.com';
+
+const labelClass = 'block text-sm text-ink-soft';
+const inputClass =
+  'mt-2 w-full border border-ink/20 bg-paper px-4 py-3 text-ink focus:border-asagi-deep focus:outline-none focus:ring-1 focus:ring-asagi-deep';
+---
+
+<Layout lang={lang} title={t('contact.heading')} description={t('contact.intro')}>
+  <section class="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:pt-24">
+    <h1 class="font-display text-4xl sm:text-5xl text-sumi">{t('contact.heading')}</h1>
+    <p class="mt-6 max-w-xl leading-relaxed">{t('contact.intro')}</p>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-16">
+    <div class="max-w-xl">
+      {
+        FORM_ENDPOINT ? (
+          <form action={FORM_ENDPOINT} method="POST" class="space-y-6">
+            <div>
+              <label class={labelClass} for="name">
+                {t('contact.name')} <span class="text-shu">*</span>
+              </label>
+              <input class={inputClass} id="name" name="name" type="text" required />
+            </div>
+
+            <div>
+              <label class={labelClass} for="email">
+                {t('contact.email')} <span class="text-shu">*</span>
+              </label>
+              <input class={inputClass} id="email" name="email" type="email" required />
+            </div>
+
+            <div>
+              <label class={labelClass} for="subject">
+                {t('contact.subject')}
+              </label>
+              <input class={inputClass} id="subject" name="subject" type="text" />
+            </div>
+
+            <div>
+              <label class={labelClass} for="message">
+                {t('contact.message')} <span class="text-shu">*</span>
+              </label>
+              <textarea class={inputClass} id="message" name="message" rows="7" required />
+            </div>
+
+            <button
+              type="submit"
+              class="border border-sumi px-8 py-3 text-sm text-sumi hover:bg-sumi hover:text-paper transition-colors"
+            >
+              {t('contact.send')}
+            </button>
+          </form>
+        ) : (
+          <div class="border border-ink/15 bg-paper-dim/50 p-8">
+            <p class="text-sm text-ink-soft">
+              {lang === 'ja'
+                ? '《お問い合わせフォームは準備中です。送信先の設定が済むまで、メールアドレスを表示しています。》'
+                : '(The enquiry form is not connected yet. Until it is, this page shows an email address so that nothing gets lost.)'}
+            </p>
+            <a
+              href={`mailto:${EMAIL}`}
+              class="mt-6 inline-block border-b border-sumi pb-1 text-lg text-sumi hover:text-asagi-deep hover:border-asagi-deep transition-colors"
+            >
+              {EMAIL}
+            </a>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</Layout>

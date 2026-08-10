@@ -1,0 +1,46 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { useTranslations, path, languages, type Lang } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+// PLACEHOLDER COPY — to be replaced with the atelier's own words.
+const body = {
+  ja: [
+    '《このページの文章はすべて仮のものです。お母様にお話を聞いて、その言葉で書き換えてください。》',
+    'たんすの奥で着られなくなった着物を、もう一度着られるかたちに仕立て直しています。',
+    '一枚の着物からとれる生地には限りがあります。柄の出方も一枚ごとに違うため、同じドレスは二度作れません。裁つ前に生地を広げ、どの文様をどこに置くかを決めてから、裁ちはじめます。',
+    'お手持ちの着物のお仕立て直しも承っています。',
+  ],
+  en: [
+    '(All of the text on this page is a placeholder. Sit down with your mother, ask her about the work, and rewrite this in her words.)',
+    'Kimono that can no longer be worn are taken apart and remade into something wearable again.',
+    'There is only so much cloth in a single kimono, and the pattern falls differently on every one, so no dress can be made twice. The cloth is spread out first, and where each motif will sit is decided before any cutting begins.',
+    'Remaking a kimono you already own is also possible — please ask.',
+  ],
+}[lang];
+---
+
+<Layout lang={lang} title={t('nav.about')} description={body[1]}>
+  <section class="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:pt-24">
+    <h1 class="font-display text-4xl sm:text-5xl text-sumi">{t('nav.about')}</h1>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-16">
+    <div class="max-w-2xl space-y-6 text-lg leading-relaxed">
+      {body.map((p) => <p>{p}</p>)}
+    </div>
+
+    <a
+      href={path(lang, 'contact')}
+      class="mt-12 inline-block border border-sumi px-7 py-3 text-sm text-sumi hover:bg-sumi hover:text-paper transition-colors"
+    >
+      {t('nav.contact')}
+    </a>
+  </section>
+</Layout>

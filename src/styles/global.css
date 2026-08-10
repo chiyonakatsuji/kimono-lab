@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* Palette sampled from the Blue Bird Dress photograph:
+   sumi black of the silk, asagi blue of the obi panel, pine green of the
+   matsu motif, and the vermilion of the crane's beak used only as an accent. */
+@theme {
+  --color-paper: #f2efe9;
+  --color-paper-dim: #e5e0d8;
+  --color-sumi: #16130f;
+  --color-ink: #3a3530;
+  --color-ink-soft: #6d665e;
+  --color-asagi: #7c9dbf;
+  --color-asagi-deep: #46617f;
+  --color-matsu: #5a6b4e;
+  --color-shu: #c14a25;
+
+  --font-mincho: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --font-display: "Cormorant Garamond", "Shippori Mincho", serif;
+  --font-sans: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+
+  --tracking-kimono: 0.28em;
+}
+
+/* These live in the `base` layer so Tailwind utilities (leading-*, font-*)
+   still override them. Outside a layer they'd win on source order and break
+   things like the display heading's tight line-height. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-mincho);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Japanese body text reads better with more line height, and needs
+     Japanese line-breaking rules rather than Latin word-breaking. */
+  :lang(ja) {
+    line-height: 1.9;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    line-break: strict;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

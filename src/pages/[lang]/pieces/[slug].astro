@@ -1,0 +1,100 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import { useTranslations, path, languages, type Lang } from '../../../i18n/ui';
+
+export async function getStaticPaths() {
+  const pieces = await getCollection('pieces', ({ data }) => !data.draft);
+  return (Object.keys(languages) as Lang[]).flatMap((lang) =>
+    pieces.map((piece) => ({
+      params: { lang, slug: piece.id },
+      props: { piece },
+    })),
+  );
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const { piece } = Astro.props;
+const text = piece.data[lang];
+
+// The story is authored as plain paragraphs separated by blank lines.
+const paragraphs = text.story.trim().split(/\n\s*\n/);
+---
+
+<Layout lang={lang} title={text.name} description={text.material}>
+  <article class="mx-auto max-w-6xl px-6 pt-12 pb-16 sm:pt-20">
+    <a
+      href={path(lang, 'pieces')}
+      class="text-sm text-ink-soft hover:text-sumi transition-colors"
+    >
+      ← {t('piece.back')}
+    </a>
+
+    <div class="mt-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+      <div>
+        <Image
+          src={piece.data.photo}
+          alt={text.alt}
+          widths={[600, 900, 1200]}
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          class="w-full h-auto bg-paper-dim"
+          loading="eager"
+        />
+
+        {
+          piece.data.gallery.length > 0 && (
+            <div class="mt-4 grid grid-cols-3 gap-4">
+              {piece.data.gallery.map((img) => (
+                <Image
+                  src={img}
+                  alt=""
+                  widths={[300, 600]}
+                  sizes="30vw"
+                  class="w-full h-auto bg-paper-dim"
+                  loading="lazy"
+                />
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="lg:pt-4 lg:sticky lg:top-12">
+        <p class="text-xs tracking-[0.28em] uppercase text-asagi-deep">
+          {t('piece.oneOfAKind')}
+        </p>
+
+        <h1 class="mt-5 font-display text-4xl sm:text-5xl text-sumi">{text.name}</h1>
+
+        <dl class="mt-8 border-t border-ink/15 pt-6 text-sm">
+          <div class="flex gap-6">
+            <dt class="w-20 shrink-0 text-ink-soft">{t('piece.material')}</dt>
+            <dd class="text-ink">{text.material}</dd>
+          </div>
+        </dl>
+
+        <div class="mt-8 space-y-5 leading-relaxed">
+          {paragraphs.map((p) => <p>{p}</p>)}
+        </div>
+
+        <div class="mt-10 border-t border-ink/15 pt-8">
+          <p class="text-sm text-ink-soft">
+            {piece.data.available ? t('piece.status.available') : t('piece.status.sold')}
+          </p>
+          {
+            piece.data.available && (
+              <a
+                href={`${path(lang, 'contact')}?piece=${encodeURIComponent(text.name)}`}
+                class="mt-5 inline-block border border-sumi px-7 py-3 text-sm text-sumi hover:bg-sumi hover:text-paper transition-colors"
+              >
+                {t('piece.inquire')}
+              </a>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </article>
+</Layout>

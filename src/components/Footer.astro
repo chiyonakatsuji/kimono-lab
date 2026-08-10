@@ -1,0 +1,46 @@
+---
+import { Image } from 'astro:assets';
+import shirasagi from '../assets/shirasagi.png';
+import { useTranslations, path, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const year = 2026;
+---
+
+<footer class="mt-24 border-t border-ink/10 bg-paper-dim/60">
+  <div class="mx-auto max-w-6xl px-6 py-14">
+    <Image
+      src={shirasagi}
+      alt=""
+      widths={[420, 840]}
+      sizes="(min-width: 640px) 420px, 80vw"
+      class="w-full max-w-md mx-auto opacity-60 mix-blend-multiply"
+      loading="lazy"
+    />
+
+    <div
+      class="mt-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-ink-soft"
+    >
+      <p class="font-display tracking-[0.2em] uppercase text-sumi">Kimono.Lab</p>
+
+      <nav aria-label="Footer" class="flex gap-6">
+        <a href={path(lang, 'pieces')} class="hover:text-sumi transition-colors"
+          >{t('nav.pieces')}</a
+        >
+        <a href={path(lang, 'about')} class="hover:text-sumi transition-colors"
+          >{t('nav.about')}</a
+        >
+        <a href={path(lang, 'contact')} class="hover:text-sumi transition-colors"
+          >{t('nav.contact')}</a
+        >
+      </nav>
+
+      <p>© {year} KIMONO.LAB — {t('footer.rights')}</p>
+    </div>
+  </div>
+</footer>

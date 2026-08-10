@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import PieceCard from '../../../components/PieceCard.astro';
+import { useTranslations, languages, type Lang } from '../../../i18n/ui';
+
+export function getStaticPaths() {
+  return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const pieces = (await getCollection('pieces', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+---
+
+<Layout lang={lang} title={t('pieces.heading')} description={t('pieces.intro')}>
+  <section class="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:pt-24">
+    <h1 class="font-display text-4xl sm:text-5xl text-sumi">{t('pieces.heading')}</h1>
+    <p class="mt-6 max-w-xl text-ink-soft leading-relaxed">{t('pieces.intro')}</p>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-16">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+      {pieces.map((piece, i) => <PieceCard piece={piece} lang={lang} eager={i === 0} />)}
+    </div>
+  </section>
+</Layout>

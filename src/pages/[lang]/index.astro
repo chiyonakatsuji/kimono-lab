@@ -1,0 +1,133 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import PieceCard from '../../components/PieceCard.astro';
+import { useTranslations, path, languages, type Lang } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const pieces = (await getCollection('pieces', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const [featured, ...rest] = pieces;
+---
+
+<Layout lang={lang} title="" description={t('home.hero.lead')}>
+  {/* ---------- Hero ---------- */}
+  <section class="mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24">
+    <div class="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-20 items-center">
+      <div class="lg:pr-8">
+        <p
+          class="text-xs sm:text-sm tracking-[0.28em] uppercase text-asagi-deep"
+        >
+          {t('site.tagline')}
+        </p>
+
+        <h1
+          class="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-wide text-sumi uppercase"
+        >
+          Kimono<br /><span class="text-asagi-deep">.</span>Lab
+        </h1>
+
+        <p class="mt-8 text-lg sm:text-xl leading-relaxed text-ink max-w-md">
+          {t('home.hero.lead')}
+        </p>
+
+        <div class="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+          <a
+            href={path(lang, 'pieces')}
+            class="border-b border-sumi pb-1 text-sumi hover:border-asagi-deep hover:text-asagi-deep transition-colors"
+          >
+            {t('home.pieces.viewAll')}
+          </a>
+          <a
+            href={path(lang, 'contact')}
+            class="border-b border-transparent pb-1 text-ink-soft hover:text-sumi hover:border-sumi transition-colors"
+          >
+            {t('nav.contact')}
+          </a>
+        </div>
+      </div>
+
+      {
+        featured && (
+          <div class="relative">
+            <Image
+              src={featured.data.photo}
+              alt={featured.data[lang].alt}
+              widths={[600, 900, 1200]}
+              sizes="(min-width: 1024px) 55vw, 100vw"
+              class="w-full h-auto"
+              loading="eager"
+            />
+            <a
+              href={path(lang, 'pieces', featured.id)}
+              class="group absolute -bottom-6 left-0 sm:left-6 bg-paper/95 backdrop-blur px-6 py-4 max-w-[80%]"
+            >
+              <p class="text-xs tracking-[0.2em] uppercase text-ink-soft">
+                {t('piece.oneOfAKind')}
+              </p>
+              <p class="mt-1 text-sumi group-hover:text-asagi-deep transition-colors">
+                {featured.data[lang].name}
+              </p>
+            </a>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  {/* ---------- Pieces ---------- */}
+  {
+    rest.length > 0 && (
+      <section class="mx-auto max-w-6xl px-6 py-16 border-t border-ink/10">
+        <div class="flex items-baseline justify-between gap-6">
+          <h2 class="font-display text-3xl sm:text-4xl text-sumi">
+            {t('home.pieces.heading')}
+          </h2>
+          <a
+            href={path(lang, 'pieces')}
+            class="text-sm text-ink-soft hover:text-sumi border-b border-transparent hover:border-sumi pb-1 transition-colors"
+          >
+            {t('home.pieces.viewAll')}
+          </a>
+        </div>
+
+        <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14">
+          {rest.slice(0, 6).map((piece) => (
+            <PieceCard piece={piece} lang={lang} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {/* ---------- About teaser ---------- */}
+  <section class="mx-auto max-w-6xl px-6 py-20 border-t border-ink/10">
+    <div class="max-w-2xl">
+      <h2 class="font-display text-3xl sm:text-4xl text-sumi">
+        {t('home.about.heading')}
+      </h2>
+      <p class="mt-8 text-lg leading-relaxed">
+        {
+          lang === 'ja'
+            ? '《ここにアトリエの紹介文が入ります。お母様の言葉に差し替えてください。》'
+            : '(Placeholder — a short introduction to the atelier goes here, in your mother’s words.)'
+        }
+      </p>
+      <a
+        href={path(lang, 'about')}
+        class="mt-8 inline-block text-sm border-b border-sumi pb-1 text-sumi hover:text-asagi-deep hover:border-asagi-deep transition-colors"
+      >
+        {t('home.about.more')}
+      </a>
+    </div>
+  </section>
+</Layout>

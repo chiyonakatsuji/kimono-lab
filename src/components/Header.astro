@@ -1,0 +1,62 @@
+---
+import { useTranslations, path, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const other: Lang = lang === 'ja' ? 'en' : 'ja';
+
+// Keep the visitor on the same page when they switch language.
+const samePageOtherLang = `/${other}${Astro.url.pathname.replace(/^\/(ja|en)/, '')}`;
+
+const links = [
+  { href: path(lang, 'pieces'), label: t('nav.pieces') },
+  { href: path(lang, 'about'), label: t('nav.about') },
+  { href: path(lang, 'contact'), label: t('nav.contact') },
+];
+
+const current = Astro.url.pathname.replace(/\/$/, '');
+---
+
+<header class="border-b border-ink/10">
+  <div class="mx-auto max-w-6xl px-6 py-6 flex items-baseline justify-between gap-6">
+    <a href={path(lang)} class="group shrink-0">
+      <span
+        class="font-display text-xl sm:text-2xl tracking-[0.2em] text-sumi uppercase"
+        >Kimono<span class="text-asagi-deep">.</span>Lab</span
+      >
+      <span class="sr-only">— {t('site.tagline')}</span>
+    </a>
+
+    <nav aria-label="Main" class="flex items-baseline gap-5 sm:gap-8 text-sm">
+      {
+        links.map((link) => {
+          const active = current === link.href.replace(/\/$/, '');
+          return (
+            <a
+              href={link.href}
+              aria-current={active ? 'page' : undefined}
+              class:list={[
+                'transition-colors hover:text-sumi',
+                active ? 'text-sumi border-b border-asagi-deep pb-1' : 'text-ink-soft',
+              ]}
+            >
+              {link.label}
+            </a>
+          );
+        })
+      }
+
+      <a
+        href={samePageOtherLang}
+        hreflang={other}
+        class="text-ink-soft hover:text-sumi transition-colors border-l border-ink/15 pl-5 sm:pl-8"
+      >
+        {other === 'ja' ? '日本語' : 'EN'}
+      </a>
+    </nav>
+  </div>
+</header>

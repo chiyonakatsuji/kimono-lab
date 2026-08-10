@@ -1,0 +1,43 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { useTranslations, path, type Lang } from '../i18n/ui';
+
+interface Props {
+  piece: CollectionEntry<'pieces'>;
+  lang: Lang;
+  /** The first card on a page carries the largest image; don't lazy-load it. */
+  eager?: boolean;
+}
+
+const { piece, lang, eager = false } = Astro.props;
+const t = useTranslations(lang);
+const text = piece.data[lang];
+---
+
+<a href={path(lang, 'pieces', piece.id)} class="group block">
+  <div class="overflow-hidden bg-paper-dim">
+    <Image
+      src={piece.data.photo}
+      alt={text.alt}
+      widths={[400, 700, 1000]}
+      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+      class="w-full h-auto transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+      loading={eager ? 'eager' : 'lazy'}
+    />
+  </div>
+
+  <div class="mt-5">
+    <h3 class="text-lg text-sumi group-hover:text-asagi-deep transition-colors">
+      {text.name}
+    </h3>
+    <p class="mt-1 text-sm text-ink-soft">{text.material}</p>
+    {
+      !piece.data.available && (
+        <p class="mt-2 text-xs tracking-widest uppercase text-ink-soft">
+          {t('piece.status.sold')}
+        </p>
+      )
+    }
+  </div>
+</a>
