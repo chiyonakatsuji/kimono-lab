@@ -30,7 +30,12 @@ const FEED = {
       mediaType: 'IMAGE',
       timestamp: '2026-08-01T10:00:00+0000',
       caption: `青い鳥のドレス\n\n黒地の縮緬に、松に飛び鶴の文様。\n\nBlue Bird Dress\n\nBlack chirimen silk, cranes over pine.\n\n#kimonolab_piece`,
-      sizes: { full: { mediaUrl: `http://127.0.0.1:${PORT}/img/a.jpg` } },
+      // Behold's real shape: an unoptimised original plus sized variants,
+      // extracted hashtags, and Instagram's alt text.
+      mediaUrl: `http://127.0.0.1:${PORT}/img/a.jpg`,
+      sizes: { full: { mediaUrl: `http://127.0.0.1:${PORT}/img/a-full.jpg` } },
+      hashtags: ['kimonolab_piece'],
+      altText: '黒い縮緬のワンショルダードレスを着たモデル',
     },
     {
       id: '222',
@@ -119,6 +124,8 @@ if (files.includes('ig-abcdefg123.md')) {
   check('available true when not sold', /^available: true$/m.test(md));
   check('english story separated', /Black chirimen silk/.test(md));
   check('inference caveats recorded in a comment', /# Inference notes:/.test(md));
+  check("instagram's alt text preferred over caption", /alt: "黒い縮緬のワンショルダードレスを着たモデル"/.test(md));
+  check('unoptimised original preferred over sizes.full', /photo: \.\.\/\.\.\/assets\/instagram\/ig-abcdefg123-1\./.test(md));
 }
 
 if (files.includes('ig-carousel77.md')) {

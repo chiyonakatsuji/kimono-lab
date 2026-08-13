@@ -88,14 +88,15 @@ function normalisePosts(feed) {
     const push = (u) => {
       if (typeof u === 'string' && u.startsWith('http') && !images.includes(u)) images.push(u);
     };
-    // Prefer the largest available rendition.
-    push(p.sizes?.full?.mediaUrl);
-    push(p.sizes?.large?.mediaUrl);
-    push(p.mediaUrl);
-    push(p.media_url);
-    for (const child of p.children?.data ?? p.children ?? []) {
-      push(child.mediaUrl ?? child.media_url);
-    }
+
+    // `mediaUrl` is the unoptimised original, so it carries the most detail.
+    // Behold's `sizes.full` is capped at 2000px and is the fallback. Both are
+    // still bounded by whatever Instagram stored on upload.
+    const best = (node) =>
+      node?.mediaUrl ?? node?.media_url ?? node?.sizes?.full?.mediaUrl ?? node?.sizes?.large?.mediaUrl;
+
+    push(best(p));
+    for (const child of p.children?.data ?? p.children ?? []) push(best(child));
     if (!images.length) push(p.thumbnailUrl ?? p.thumbnail_url);
 
     return {
@@ -104,6 +105,11 @@ function normalisePosts(feed) {
       permalink: p.permalink ?? p.url ?? null,
       mediaType: (p.mediaType ?? p.media_type ?? 'IMAGE').toUpperCase(),
       timestamp: p.timestamp ?? p.takenAt ?? null,
+      // Instagram's own alt text, when the feed provides it — better than
+      // truncating the caption, which is what we fall back to.
+      altText: typeof p.altText === 'string' && p.altText.trim() ? p.altText.trim() : null,
+      // Behold extracts hashtags for us; the parser does it too as a fallback.
+      hashtags: Array.isArray(p.hashtags) ? p.hashtags.map((h) => String(h).replace(/^#/, '')) : null,
       images,
     };
   });
@@ -143,7 +149,7 @@ function quote(s) {
 
 function buildMarkdown(post, parsed, files, order) {
   const name = parsed.name || 'Untitled';
-  const alt = parsed.ja?.split('\n')[0]?.slice(0, 140) || name;
+  const alt = post.altText || parsed.ja?.split('\n')[0]?.slice(0, 140) || name;
 
   const lines = [
     '---',
@@ -221,7 +227,10 @@ async function main() {
     const slug = slugFor(post);
 
     if (REQUIRED_TAG) {
-      const tags = parseCaption(post.caption).tags.map((t) => t.toLowerCase());
+      // Use the feed's own extracted hashtags when present, else parse them.
+      const tags = (post.hashtags ?? parseCaption(post.caption).tags).map((t) =>
+        t.toLowerCase(),
+      );
       if (!tags.includes(REQUIRED_TAG)) {
         skipped.push(`${slug}: missing #${REQUIRED_TAG}`);
         continue;
