@@ -1,12 +1,19 @@
 ---
 order: 1
-photo: ../../assets/pieces/blue-bird-dress.jpg
+# Frame 11 leads: full length, with the whole hem panel visible. 13 is the
+# closer portrait, and the dress-form shot is kept as a flat, uncropped view.
+photo: ../../assets/lookbook/11.jpg
+gallery:
+  - ../../assets/lookbook/13.jpg
+  - ../../assets/pieces/blue-bird-dress.jpg
 available: true
 draft: false
 
 provenance:
   clothKey: chirimen
   motifKey: tsuru-matsu
+  # NOTE: "chirimen" is inferred from the crêpe texture in the photograph.
+  # Confirm with the atelier — it could be rinzu or another weave.
   cloth:
     ja: 縮緬（ちりめん）
     en: Chirimen — silk crêpe

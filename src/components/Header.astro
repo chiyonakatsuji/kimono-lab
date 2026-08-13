@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import wordmark from '../assets/logo-wordmark.png';
 import { useTranslations, path, type Lang } from '../i18n/ui';
 
 interface Props {
@@ -27,7 +29,16 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 <header class="mx-auto max-w-[88rem] w-full px-8 sm:px-14 pt-10 pb-16 sm:pt-14">
   <div class="flex items-center justify-between gap-8">
     <a href={path(lang)} class="shrink-0">
-      <span class="text-sm tracking-[0.34em] text-sumi uppercase">Kimono.Lab</span>
+      {/* logo-wordmark.png was converted from black-on-white to a true alpha
+          mask, so it sits on the paper colour with no grey box behind it. */}
+      <Image
+        src={wordmark}
+        alt="KIMONO.LAB JAPAN"
+        widths={[240, 480]}
+        sizes="240px"
+        class="h-9 sm:h-11 w-auto"
+        loading="eager"
+      />
       <span class="sr-only">— {t('site.tagline')}</span>
     </a>
 

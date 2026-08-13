@@ -1,0 +1,132 @@
+---
+import { Image } from 'astro:assets';
+
+/**
+ * DEVELOPMENT HELPER — delete before launch.
+ *
+ * A contact sheet of every lookbook frame with its filename, so the atelier
+ * can say which garment each photograph belongs to. Not linked from anywhere
+ * and excluded from search engines.
+ */
+const frames = Object.entries(
+  import.meta.glob<{ default: ImageMetadata }>('../assets/lookbook/*.jpg', { eager: true }),
+)
+  .map(([file, mod]) => ({
+    name: file.split('/').pop()!,
+    image: mod.default,
+  }))
+  .sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }),
+  );
+
+/**
+ * Which garment each frame belongs to. Determined by sampling each image for
+ * the asagi-blue of the Blue Bird Dress obi panel: frames 11 and 13 register
+ * 1.0–1.8% blue, every other frame 0.01% or less.
+ */
+const BLUE_BIRD = ['11.jpg', '13.jpg'];
+const inUse: Record<string, string> = {
+  '11.jpg': 'main image',
+  '13.jpg': 'gallery',
+  '1.jpg': 'main image',
+  '2-1.jpg': 'gallery',
+  '7.jpg': 'gallery',
+  '8.jpg': 'gallery',
+};
+
+function describe(name: string): string {
+  const piece = BLUE_BIRD.includes(name) ? 'Blue Bird Dress' : 'Flower Cart Dress';
+  const role = inUse[name];
+  return role ? `${piece} — ${role}` : `${piece} — spare`;
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Lookbook contact sheet — internal</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 2.5rem;
+        background: #fbfaf8;
+        color: #3d3833;
+        font-family: system-ui, sans-serif;
+      }
+      h1 {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      p {
+        max-width: 40rem;
+        line-height: 1.7;
+        font-size: 0.875rem;
+      }
+      .grid {
+        margin-top: 2.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 1.75rem;
+      }
+      figure {
+        margin: 0;
+      }
+      img {
+        width: 100%;
+        height: auto;
+        background: #f2f0eb;
+      }
+      figcaption {
+        margin-top: 0.6rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
+      }
+      .file {
+        font-family: ui-monospace, monospace;
+        font-weight: 600;
+      }
+      .done {
+        color: #4a6076;
+      }
+      .todo {
+        color: #a2360f;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Lookbook contact sheet — internal, delete before launch</h1>
+    <p>
+      Every photograph in <span class="file">src/assets/lookbook/</span>, grouped by
+      garment. Blue = currently used on the site; red = a spare view not shown
+      anywhere yet. Tell me if any garment is misidentified, or which spares you want
+      added. <span class="file">12.jpg</span> was left out — it is only 200×300px.
+    </p>
+
+    <div class="grid">
+      {
+        frames.map((frame) => (
+          <figure>
+            <Image
+              src={frame.image}
+              alt={frame.name}
+              widths={[190, 380]}
+              sizes="190px"
+              loading="lazy"
+            />
+            <figcaption>
+              <span class="file">{frame.name}</span>
+              <br />
+              <span class:list={[inUse[frame.name] ? 'done' : 'todo']}>
+                {describe(frame.name)}
+              </span>
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+  </body>
+</html>
