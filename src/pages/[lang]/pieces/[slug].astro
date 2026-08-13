@@ -110,7 +110,7 @@ const sameMotif = relatedTo(piece, pieces, 'motif');
           {
             piece.data.available && (
               <a
-                href={`${path(lang, 'contact')}?piece=${encodeURIComponent(text.name)}`}
+                href={path(lang, 'contact')}
                 class="mt-6 inline-block text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors"
               >
                 {t('piece.inquire')}

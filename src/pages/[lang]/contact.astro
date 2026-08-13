@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { useTranslations, languages, type Lang } from '../../i18n/ui';
+import { INSTAGRAM_URL, INSTAGRAM_HANDLE, EMAIL, STOCKISTS } from '../../lib/site';
 
 export function getStaticPaths() {
   return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
@@ -9,17 +10,8 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
 
-// NOT YET CONNECTED. A static site cannot send email on its own; this form
-// needs a form service (Formspree / Cloudflare Worker / Netlify Forms) before
-// it will do anything. Until then FORM_ENDPOINT stays null and the page shows
-// an email address instead, so no message can be silently lost.
-const FORM_ENDPOINT: string | null = null;
-
-// TODO: replace with the atelier's real address before launch.
-const EMAIL = 'hello@example.com';
-
-const fieldClass =
-  'mt-3 w-full border-0 border-b border-ink/20 bg-transparent pb-3 text-ink focus:border-ai focus:outline-none';
+const linkClass =
+  'text-lg text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors';
 ---
 
 <Layout lang={lang} title={t('contact.heading')} description={t('contact.intro')}>
@@ -27,61 +19,49 @@ const fieldClass =
     <p class="label">{t('contact.heading')}</p>
     <p class="mt-12 max-w-xl text-lg leading-[2] text-ink">{t('contact.intro')}</p>
 
-    <div class="mt-16 max-w-lg">
-      {
-        FORM_ENDPOINT ? (
-          <form action={FORM_ENDPOINT} method="POST" class="space-y-10">
-            <div>
-              <label class="label" for="name">
-                {t('contact.name')}
-              </label>
-              <input class={fieldClass} id="name" name="name" type="text" required />
-            </div>
+    {/* Instagram DM is how the atelier already takes enquiries, so it is the
+        primary route rather than a form we would have to host. */}
+    <div class="mt-16">
+      <p class="note">{t('contact.dm')}</p>
+      <a
+        href={INSTAGRAM_URL}
+        rel="me noopener"
+        target="_blank"
+        class:list={['mt-6 inline-block', linkClass]}
+      >
+        @{INSTAGRAM_HANDLE}
+      </a>
+      <p class="label mt-5">{t('contact.dmDetail')}</p>
+    </div>
 
-            <div>
-              <label class="label" for="email">
-                {t('contact.email')}
-              </label>
-              <input class={fieldClass} id="email" name="email" type="email" required />
-            </div>
+    {
+      EMAIL && (
+        <div class="mt-16">
+          <p class="label">{t('contact.email')}</p>
+          <a href={`mailto:${EMAIL}`} class:list={['mt-6 inline-block', linkClass]}>
+            {EMAIL}
+          </a>
+        </div>
+      )
+    }
 
-            <div>
-              <label class="label" for="subject">
-                {t('contact.subject')}
-              </label>
-              <input class={fieldClass} id="subject" name="subject" type="text" />
-            </div>
+    {/* ---------- Stockists ---------- */}
+    <div class="mt-40">
+      <p class="label">{t('stockists.heading')}</p>
+      <p class="mt-8 max-w-xl leading-[2] text-ink">{t('stockists.intro')}</p>
 
-            <div>
-              <label class="label" for="message">
-                {t('contact.message')}
-              </label>
-              <textarea class={fieldClass} id="message" name="message" rows="6" required />
-            </div>
+      <ul class="mt-10 space-y-4">
+        {
+          STOCKISTS.map((shop) => (
+            <li>
+              <p class="text-ink">{shop.name[lang]}</p>
+              {shop.detail && <p class="label mt-1">{shop.detail[lang]}</p>}
+            </li>
+          ))
+        }
+      </ul>
 
-            <button
-              type="submit"
-              class="text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors"
-            >
-              {t('contact.send')}
-            </button>
-          </form>
-        ) : (
-          <div>
-            <p class="label leading-[1.9]">
-              {lang === 'ja'
-                ? '《お問い合わせフォームは準備中です。送信先の設定が済むまで、メールアドレスを表示しています。》'
-                : '(The enquiry form is not connected yet. Until it is, this page shows an email address so that nothing gets lost.)'}
-            </p>
-            <a
-              href={`mailto:${EMAIL}`}
-              class="mt-8 inline-block text-lg text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors"
-            >
-              {EMAIL}
-            </a>
-          </div>
-        )
-      }
+      <p class="note mt-12">{t('stockists.shipping')}</p>
     </div>
   </section>
 </Layout>

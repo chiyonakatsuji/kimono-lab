@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import PieceCard from '../../components/PieceCard.astro';
 import { useTranslations, path, languages, type Lang } from '../../i18n/ui';
+import { STOCKISTS } from '../../lib/site';
 
 export function getStaticPaths() {
   return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
@@ -26,6 +27,7 @@ const [featured, ...rest] = pieces;
     <h1 class="mt-8 max-w-2xl text-2xl sm:text-3xl leading-[1.7] text-sumi">
       {t('home.hero.lead')}
     </h1>
+    <p class="label mt-8">{t('site.oneOfAKind')}</p>
   </section>
 
   {/* ---------- The photograph, given room ---------- */}
@@ -84,5 +86,21 @@ const [featured, ...rest] = pieces;
         {t('home.pieces.viewAll')}
       </a>
     </div>
+  </section>
+
+  {/* ---------- Stockists: the hotel boutiques are a trust signal, so they
+       belong on the homepage rather than buried on Contact. ---------- */}
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-40">
+    <p class="label">{t('stockists.heading')}</p>
+    <ul class="mt-8 flex flex-wrap gap-x-12 gap-y-3">
+      {STOCKISTS.map((shop) => <li class="text-ink">{shop.name[lang]}</li>)}
+    </ul>
+    <p class="note mt-8">{t('stockists.shipping')}</p>
+    <a
+      href={path(lang, 'contact')}
+      class="label mt-10 inline-block hover:text-sumi transition-colors"
+    >
+      {t('nav.contact')}
+    </a>
   </section>
 </Layout>

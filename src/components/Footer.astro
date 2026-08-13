@@ -1,5 +1,6 @@
 ---
 import { useTranslations, path, type Lang } from '../i18n/ui';
+import { INSTAGRAM_URL } from '../lib/site';
 
 interface Props {
   lang: Lang;
@@ -19,7 +20,7 @@ const year = new Date().getFullYear();
       <p class="label mt-4">{t('site.tagline')}</p>
     </div>
 
-    <nav aria-label="Footer" class="flex gap-8">
+    <nav aria-label="Footer" class="flex flex-wrap gap-8">
       <a href={path(lang, 'pieces')} class="label hover:text-sumi transition-colors"
         >{t('nav.pieces')}</a
       >
@@ -28,6 +29,12 @@ const year = new Date().getFullYear();
       >
       <a href={path(lang, 'contact')} class="label hover:text-sumi transition-colors"
         >{t('nav.contact')}</a
+      >
+      <a
+        href={INSTAGRAM_URL}
+        rel="me noopener"
+        target="_blank"
+        class="label hover:text-sumi transition-colors">{t('contact.instagram')}</a
       >
     </nav>
 

@@ -21,8 +21,10 @@ const links = [
 const current = Astro.url.pathname.replace(/\/$/, '');
 ---
 
-<!-- No bottom border: the space below does the separating. -->
-<header class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-10 pb-16 sm:pt-14">
+<!-- No bottom border: the space below does the separating.
+     `w-full` matters: body is a flex column, and `mx-auto` alone would cancel
+     the default stretch and shrink the header to its content width. -->
+<header class="mx-auto max-w-[88rem] w-full px-8 sm:px-14 pt-10 pb-16 sm:pt-14">
   <div class="flex items-center justify-between gap-8">
     <a href={path(lang)} class="shrink-0">
       <span class="text-sm tracking-[0.34em] text-sumi uppercase">Kimono.Lab</span>

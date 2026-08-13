@@ -18,9 +18,13 @@ export function isLang(value: string | undefined): value is Lang {
  */
 export const ui = {
   ja: {
-    'site.tagline': '一枚の着物から、一着のドレスへ',
+    // The brand's own tagline, from its Instagram bio. Kept in English in both
+    // languages, as the brand itself does.
+    'site.tagline': 'Your Beauty, Your Story',
+    'site.oneOfAKind': '全て一点物',
     'nav.pieces': '作品',
     'nav.about': 'アトリエ',
+    'nav.stockists': '取扱店',
     'nav.contact': 'お問い合わせ',
     'home.hero.lead': '眠っていた着物に、もう一度着られる時間を。',
     'home.pieces.viewAll': '作品を見る',
@@ -48,6 +52,12 @@ export const ui = {
     'contact.heading': 'お問い合わせ',
     'contact.intro':
       '作品のご相談、お持ちの着物のお仕立て直しについて、お気軽にご連絡ください。',
+    'contact.dm': 'InstagramのDMより承ります',
+    'contact.dmDetail': '試着・購入・取り置き',
+    'contact.instagram': 'Instagram',
+    'stockists.heading': '取扱店',
+    'stockists.intro': '下記のホテル内店舗にてお取り扱いいただいております。',
+    'stockists.shipping': '国内・海外への発送に対応しています。',
     'contact.name': 'お名前',
     'contact.email': 'メールアドレス',
     'contact.subject': '件名',
@@ -57,9 +67,11 @@ export const ui = {
     skip: '本文へ移動',
   },
   en: {
-    'site.tagline': 'One kimono, one dress',
+    'site.tagline': 'Your Beauty, Your Story',
+    'site.oneOfAKind': 'All one of a kind',
     'nav.pieces': 'Pieces',
     'nav.about': 'Atelier',
+    'nav.stockists': 'Stockists',
     'nav.contact': 'Contact',
     'home.hero.lead': 'Giving a sleeping kimono somewhere to be worn again.',
     'home.pieces.viewAll': 'View pieces',
@@ -88,6 +100,12 @@ export const ui = {
     'contact.heading': 'Contact',
     'contact.intro':
       'For enquiries about a piece, or about remaking a kimono you already own, please do get in touch.',
+    'contact.dm': 'Enquiries by Instagram direct message',
+    'contact.dmDetail': 'Fittings, purchases and reservations',
+    'contact.instagram': 'Instagram',
+    'stockists.heading': 'Stockists',
+    'stockists.intro': 'Pieces are carried at the following hotel boutiques.',
+    'stockists.shipping': 'Shipping is available within Japan and internationally.',
     'contact.name': 'Name',
     'contact.email': 'Email',
     'contact.subject': 'Subject',
