@@ -22,22 +22,38 @@ const pieces = defineCollection({
       available: z.boolean().default(true),
       draft: z.boolean().default(false),
 
-      provenance: z.object({
-        // Slugs used for grouping and URLs.
-        clothKey: z
-          .string()
-          .regex(/^[a-z0-9-]+$/, 'clothKey must be lowercase letters, numbers and hyphens'),
-        motifKey: z
-          .string()
-          .regex(/^[a-z0-9-]+$/, 'motifKey must be lowercase letters, numbers and hyphens'),
-        // Displayed text.
-        cloth: bilingual,
-        motif: bilingual,
-        era: bilingual,
-        region: bilingual,
-        /** What the motif traditionally signifies. Optional. */
-        meaning: bilingual.optional(),
-      }),
+      /**
+       * Where this entry came from. Entries written by scripts/sync-instagram.mjs
+       * are marked `instagram` and are overwritten on the next sync — edit those
+       * by hand and your changes are lost. Curated entries are `atelier`.
+       */
+      source: z.enum(['atelier', 'instagram']).default('atelier'),
+      /** Link back to the original post, for instagram-sourced entries. */
+      permalink: z.string().url().optional(),
+
+      /**
+       * Optional, because Instagram captions do not carry structured
+       * provenance. Auto-synced entries have whatever could be inferred from
+       * the caption, or nothing at all.
+       */
+      provenance: z
+        .object({
+          // Slugs used for grouping and URLs.
+          clothKey: z
+            .string()
+            .regex(/^[a-z0-9-]+$/, 'clothKey must be lowercase letters, numbers and hyphens'),
+          motifKey: z
+            .string()
+            .regex(/^[a-z0-9-]+$/, 'motifKey must be lowercase letters, numbers and hyphens'),
+          // Displayed text.
+          cloth: bilingual,
+          motif: bilingual,
+          era: bilingual.optional(),
+          region: bilingual.optional(),
+          /** What the motif traditionally signifies. Optional. */
+          meaning: bilingual.optional(),
+        })
+        .optional(),
 
       ja: z.object({ name: z.string(), story: z.string(), alt: z.string() }),
       en: z.object({ name: z.string(), story: z.string(), alt: z.string() }),

@@ -9,7 +9,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "sync": "node --env-file-if-exists=.env scripts/sync-instagram.mjs",
+    "sync:test": "node scripts/sync-instagram.test.mjs",
+    "build:synced": "npm run sync && astro build"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

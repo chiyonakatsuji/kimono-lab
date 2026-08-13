@@ -30,7 +30,7 @@ const prov = piece.data.provenance;
     <h3 class="text-base text-sumi group-hover:text-ai transition-colors">
       {text.name}
     </h3>
-    <p class="label mt-2">{prov.cloth[lang]}</p>
+    {prov && <p class="label mt-2">{prov.cloth[lang]}</p>}
     {
       !piece.data.available && (
         <p class="label mt-2 text-ink-soft/70">{t('piece.status.sold')}</p>

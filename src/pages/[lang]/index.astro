@@ -47,8 +47,12 @@ const [featured, ...rest] = pieces;
             <h2 class="text-base text-sumi group-hover:text-ai transition-colors">
               {featured.data[lang].name}
             </h2>
-            <p class="label">{featured.data.provenance.cloth[lang]}</p>
-            <p class="label">{featured.data.provenance.motif[lang]}</p>
+            {featured.data.provenance && (
+              <>
+                <p class="label">{featured.data.provenance.cloth[lang]}</p>
+                <p class="label">{featured.data.provenance.motif[lang]}</p>
+              </>
+            )}
           </div>
         </a>
       </section>

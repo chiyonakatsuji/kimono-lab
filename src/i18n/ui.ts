@@ -49,6 +49,7 @@ export const ui = {
     'piece.back': '作品一覧へ',
     'piece.seeAlsoCloth': '同じ生地の作品',
     'piece.seeAlsoMotif': '同じ文様の作品',
+    'piece.viewOnInstagram': 'Instagramの投稿を見る',
     'contact.heading': 'お問い合わせ',
     'contact.intro':
       '作品のご相談、お持ちの着物のお仕立て直しについて、お気軽にご連絡ください。',
@@ -97,6 +98,7 @@ export const ui = {
     'piece.back': 'All pieces',
     'piece.seeAlsoCloth': 'Same cloth',
     'piece.seeAlsoMotif': 'Same motif',
+    'piece.viewOnInstagram': 'View the original post',
     'contact.heading': 'Contact',
     'contact.intro':
       'For enquiries about a piece, or about remaking a kimono you already own, please do get in touch.',

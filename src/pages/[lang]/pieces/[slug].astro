@@ -25,14 +25,27 @@ const prov = piece.data.provenance;
 // Authored as plain paragraphs separated by blank lines.
 const paragraphs = text.story.trim().split(/\n\s*\n/);
 
-// Provenance rows. Cloth and motif link out to everything sharing them.
-const rows = [
-  { label: t('piece.cloth'), value: prov.cloth[lang], href: path(lang, 'pieces', 'cloth', prov.clothKey) },
-  { label: t('piece.motif'), value: prov.motif[lang], href: path(lang, 'pieces', 'motif', prov.motifKey) },
-  { label: t('piece.era'), value: prov.era[lang], href: null },
-  { label: t('piece.region'), value: prov.region[lang], href: null },
-  ...(prov.meaning ? [{ label: t('piece.meaning'), value: prov.meaning[lang], href: null }] : []),
-];
+// Provenance rows. Cloth and motif link out to everything sharing them, unless
+// the value is the sync script's "unspecified" placeholder. Provenance is
+// absent entirely on some Instagram-synced pieces.
+const linkable = (key: string) => key !== 'unspecified';
+const rows = prov
+  ? [
+      {
+        label: t('piece.cloth'),
+        value: prov.cloth[lang],
+        href: linkable(prov.clothKey) ? path(lang, 'pieces', 'cloth', prov.clothKey) : null,
+      },
+      {
+        label: t('piece.motif'),
+        value: prov.motif[lang],
+        href: linkable(prov.motifKey) ? path(lang, 'pieces', 'motif', prov.motifKey) : null,
+      },
+      ...(prov.era ? [{ label: t('piece.era'), value: prov.era[lang], href: null }] : []),
+      ...(prov.region ? [{ label: t('piece.region'), value: prov.region[lang], href: null }] : []),
+      ...(prov.meaning ? [{ label: t('piece.meaning'), value: prov.meaning[lang], href: null }] : []),
+    ]
+  : [];
 
 const sameCloth = relatedTo(piece, pieces, 'cloth');
 const sameMotif = relatedTo(piece, pieces, 'motif');
@@ -82,7 +95,7 @@ const sameMotif = relatedTo(piece, pieces, 'motif');
         {/* Provenance — the organising idea of the site. */}
         <dl class="mt-14 space-y-5">
           {
-            rows.map((row) => (
+            rows.map((row: { label: string; value: string; href: string | null }) => (
               <div class="grid grid-cols-[5.5rem_1fr] gap-6 items-baseline">
                 <dt class="label">{row.label}</dt>
                 <dd class="text-ink leading-[1.9]">
@@ -115,6 +128,22 @@ const sameMotif = relatedTo(piece, pieces, 'motif');
               >
                 {t('piece.inquire')}
               </a>
+            )
+          }
+
+          {/* Synced pieces credit the original post. */}
+          {
+            piece.data.permalink && (
+              <p class="mt-8">
+                <a
+                  href={piece.data.permalink}
+                  rel="noopener"
+                  target="_blank"
+                  class="label hover:text-sumi transition-colors"
+                >
+                  {t('piece.viewOnInstagram')}
+                </a>
+              </p>
             )
           }
         </div>

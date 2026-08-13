@@ -19,14 +19,23 @@ export async function getPieces(): Promise<Piece[]> {
   return pieces.sort((a, b) => a.data.order - b.data.order);
 }
 
-function keyOf(piece: Piece, facet: Facet): string {
-  return facet === 'cloth'
-    ? piece.data.provenance.clothKey
-    : piece.data.provenance.motifKey;
+/**
+ * Provenance is optional — Instagram-synced entries may have none, since a
+ * caption often carries no cloth or motif. Those pieces still appear in the
+ * gallery; they just cannot be browsed by provenance.
+ */
+function keyOf(piece: Piece, facet: Facet): string | null {
+  const prov = piece.data.provenance;
+  if (!prov) return null;
+  const key = facet === 'cloth' ? prov.clothKey : prov.motifKey;
+  // "unspecified" is the sync script's placeholder; not worth a facet page.
+  return key === 'unspecified' ? null : key;
 }
 
-function labelOf(piece: Piece, facet: Facet): Record<Lang, string> {
-  const value = facet === 'cloth' ? piece.data.provenance.cloth : piece.data.provenance.motif;
+function labelOf(piece: Piece, facet: Facet): Record<Lang, string> | null {
+  const prov = piece.data.provenance;
+  if (!prov) return null;
+  const value = facet === 'cloth' ? prov.cloth : prov.motif;
   return { ja: value.ja, en: value.en };
 }
 
@@ -39,11 +48,14 @@ export function groupBy(pieces: Piece[], facet: Facet): FacetGroup[] {
 
   for (const piece of pieces) {
     const key = keyOf(piece, facet);
+    const label = labelOf(piece, facet);
+    if (!key || !label) continue;
+
     const existing = groups.get(key);
     if (existing) {
       existing.pieces.push(piece);
     } else {
-      groups.set(key, { key, label: labelOf(piece, facet), pieces: [piece] });
+      groups.set(key, { key, label, pieces: [piece] });
     }
   }
 
@@ -55,5 +67,6 @@ export function groupBy(pieces: Piece[], facet: Facet): FacetGroup[] {
 /** Other pieces sharing this piece's cloth or motif. */
 export function relatedTo(piece: Piece, pieces: Piece[], facet: Facet): Piece[] {
   const key = keyOf(piece, facet);
+  if (!key) return [];
   return pieces.filter((p) => p.id !== piece.id && keyOf(p, facet) === key);
 }
