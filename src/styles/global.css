@@ -1,29 +1,22 @@
 @import "tailwindcss";
 
-/* Palette sampled from the Blue Bird Dress photograph:
-   sumi black of the silk, asagi blue of the obi panel, pine green of the
-   matsu motif, and the vermilion of the crane's beak used only as an accent. */
+/* Two references, and only what they share:
+   SHIRO's cleanliness — near-white ground, space instead of borders, tiny
+   wide-tracked labels. Toraya's simplicity — mincho, warm ink, no ornament.
+   Deliberately few colours. There is no accent red; the garments carry the
+   colour and the page stays out of their way. */
 @theme {
-  --color-paper: #f2efe9;
-  --color-paper-dim: #e5e0d8;
-  --color-sumi: #16130f;
-  --color-ink: #3a3530;
-  --color-ink-soft: #6d665e;
-  --color-asagi: #7c9dbf;
-  --color-asagi-deep: #46617f;
-  --color-matsu: #5a6b4e;
-  --color-shu: #c14a25;
+  --color-paper: #fbfaf8;
+  --color-paper-dim: #f2f0eb;
+  --color-sumi: #1a1714;
+  --color-ink: #3d3833;
+  --color-ink-soft: #8a8479;
+  --color-ai: #4a6076;
 
   --font-mincho: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif;
-  --font-display: "Cormorant Garamond", "Shippori Mincho", serif;
-  --font-sans: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
-
-  --tracking-kimono: 0.28em;
+  --font-label: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 
-/* These live in the `base` layer so Tailwind utilities (leading-*, font-*)
-   still override them. Outside a layer they'd win on source order and break
-   things like the display heading's tight line-height. */
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -33,18 +26,28 @@
     background-color: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-mincho);
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  /* Japanese body text reads better with more line height, and needs
-     Japanese line-breaking rules rather than Latin word-breaking. */
+  /* Japanese body text needs more leading and Japanese line-breaking rules,
+     not Latin word-breaking. In `base` so utilities still win. */
   :lang(ja) {
-    line-height: 1.9;
+    line-height: 1.95;
     word-break: normal;
     overflow-wrap: anywhere;
     line-break: strict;
   }
+}
+
+@utility label {
+  font-family: var(--font-label);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
 }
 
 @media (prefers-reduced-motion: reduce) {

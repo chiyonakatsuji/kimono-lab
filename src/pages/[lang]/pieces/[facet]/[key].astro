@@ -1,0 +1,53 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import PieceCard from '../../../../components/PieceCard.astro';
+import { getPieces, groupBy, type Facet } from '../../../../lib/facets';
+import { useTranslations, path, languages, type Lang } from '../../../../i18n/ui';
+
+/**
+ * Browsing by provenance: /ja/pieces/cloth/chirimen, /en/pieces/motif/tsuru-matsu.
+ * One route covers both facets.
+ */
+export async function getStaticPaths() {
+  const pieces = await getPieces();
+  const facets: Facet[] = ['cloth', 'motif'];
+
+  return (Object.keys(languages) as Lang[]).flatMap((lang) =>
+    facets.flatMap((facet) =>
+      groupBy(pieces, facet).map((group) => ({
+        params: { lang, facet, key: group.key },
+        props: { facet, group },
+      })),
+    ),
+  );
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const { facet, group } = Astro.props;
+
+const heading = group.label[lang];
+const facetLabel = facet === 'cloth' ? t('piece.cloth') : t('piece.motif');
+---
+
+<Layout lang={lang} title={heading} description={`${facetLabel} — ${heading}`}>
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+    <p class="label">{facetLabel}</p>
+    <h1 class="mt-8 text-2xl sm:text-3xl leading-[1.7] text-sumi">{heading}</h1>
+    <p class="label mt-6">
+      {group.pieces.length}{lang === 'ja' ? t('pieces.count') : ` ${t('pieces.count')}`}
+    </p>
+    <a
+      href={path(lang, 'pieces')}
+      class="label mt-10 inline-block hover:text-sumi transition-colors"
+    >
+      ← {t('piece.back')}
+    </a>
+  </section>
+
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-24">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
+      {group.pieces.map((piece, i) => <PieceCard piece={piece} lang={lang} eager={i === 0} />)}
+    </div>
+  </section>
+</Layout>

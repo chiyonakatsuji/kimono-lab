@@ -1,8 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../../../layouts/Layout.astro';
 import PieceCard from '../../../components/PieceCard.astro';
-import { useTranslations, languages, type Lang } from '../../../i18n/ui';
+import { getPieces, groupBy } from '../../../lib/facets';
+import { useTranslations, path, languages, type Lang } from '../../../i18n/ui';
 
 export function getStaticPaths() {
   return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
@@ -11,19 +11,64 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
 
-const pieces = (await getCollection('pieces', ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+const pieces = await getPieces();
+const cloths = groupBy(pieces, 'cloth');
+const motifs = groupBy(pieces, 'motif');
+
+// With only one or two pieces, a filter list is noise rather than help.
+const showFacets = pieces.length > 2;
 ---
 
 <Layout lang={lang} title={t('pieces.heading')} description={t('pieces.intro')}>
-  <section class="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:pt-24">
-    <h1 class="font-display text-4xl sm:text-5xl text-sumi">{t('pieces.heading')}</h1>
-    <p class="mt-6 max-w-xl text-ink-soft leading-relaxed">{t('pieces.intro')}</p>
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+    <p class="label">{t('pieces.heading')}</p>
+    <p class="mt-8 max-w-lg text-lg leading-[2] text-ink">{t('pieces.intro')}</p>
   </section>
 
-  <section class="mx-auto max-w-6xl px-6 pb-16">
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+  {
+    showFacets && (
+      <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-20">
+        <div class="grid sm:grid-cols-2 gap-12 max-w-3xl">
+          <div>
+            <p class="label">{t('pieces.byCloth')}</p>
+            <ul class="mt-5 space-y-2">
+              {cloths.map((group) => (
+                <li>
+                  <a
+                    href={path(lang, 'pieces', 'cloth', group.key)}
+                    class="text-ink hover:text-ai transition-colors"
+                  >
+                    {group.label[lang]}
+                    <span class="label ml-2">{group.pieces.length}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p class="label">{t('pieces.byMotif')}</p>
+            <ul class="mt-5 space-y-2">
+              {motifs.map((group) => (
+                <li>
+                  <a
+                    href={path(lang, 'pieces', 'motif', group.key)}
+                    class="text-ink hover:text-ai transition-colors"
+                  >
+                    {group.label[lang]}
+                    <span class="label ml-2">{group.pieces.length}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-28">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
       {pieces.map((piece, i) => <PieceCard piece={piece} lang={lang} eager={i === 0} />)}
     </div>
   </section>

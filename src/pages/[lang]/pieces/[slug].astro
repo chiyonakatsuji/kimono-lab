@@ -1,57 +1,70 @@
 ---
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import Layout from '../../../layouts/Layout.astro';
+import PieceCard from '../../../components/PieceCard.astro';
+import { getPieces, relatedTo } from '../../../lib/facets';
 import { useTranslations, path, languages, type Lang } from '../../../i18n/ui';
 
 export async function getStaticPaths() {
-  const pieces = await getCollection('pieces', ({ data }) => !data.draft);
+  const pieces = await getPieces();
   return (Object.keys(languages) as Lang[]).flatMap((lang) =>
     pieces.map((piece) => ({
       params: { lang, slug: piece.id },
-      props: { piece },
+      props: { piece, pieces },
     })),
   );
 }
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-const { piece } = Astro.props;
-const text = piece.data[lang];
+const { piece, pieces } = Astro.props;
 
-// The story is authored as plain paragraphs separated by blank lines.
+const text = piece.data[lang];
+const prov = piece.data.provenance;
+
+// Authored as plain paragraphs separated by blank lines.
 const paragraphs = text.story.trim().split(/\n\s*\n/);
+
+// Provenance rows. Cloth and motif link out to everything sharing them.
+const rows = [
+  { label: t('piece.cloth'), value: prov.cloth[lang], href: path(lang, 'pieces', 'cloth', prov.clothKey) },
+  { label: t('piece.motif'), value: prov.motif[lang], href: path(lang, 'pieces', 'motif', prov.motifKey) },
+  { label: t('piece.era'), value: prov.era[lang], href: null },
+  { label: t('piece.region'), value: prov.region[lang], href: null },
+  ...(prov.meaning ? [{ label: t('piece.meaning'), value: prov.meaning[lang], href: null }] : []),
+];
+
+const sameCloth = relatedTo(piece, pieces, 'cloth');
+const sameMotif = relatedTo(piece, pieces, 'motif');
 ---
 
-<Layout lang={lang} title={text.name} description={text.material}>
-  <article class="mx-auto max-w-6xl px-6 pt-12 pb-16 sm:pt-20">
-    <a
-      href={path(lang, 'pieces')}
-      class="text-sm text-ink-soft hover:text-sumi transition-colors"
-    >
+<Layout lang={lang} title={text.name} description={prov.cloth[lang]}>
+  <article class="mx-auto max-w-[88rem] px-8 sm:px-14">
+    <a href={path(lang, 'pieces')} class="label hover:text-sumi transition-colors">
       ← {t('piece.back')}
     </a>
 
-    <div class="mt-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+    <div class="mt-14 grid lg:grid-cols-[1.15fr_1fr] gap-16 lg:gap-28 items-start">
+      {/* ---------- Photographs ---------- */}
       <div>
         <Image
           src={piece.data.photo}
           alt={text.alt}
-          widths={[600, 900, 1200]}
-          sizes="(min-width: 1024px) 50vw, 100vw"
+          widths={[720, 1100, 1600]}
+          sizes="(min-width: 1024px) 55vw, 100vw"
           class="w-full h-auto bg-paper-dim"
           loading="eager"
         />
 
         {
           piece.data.gallery.length > 0 && (
-            <div class="mt-4 grid grid-cols-3 gap-4">
+            <div class="mt-10 grid grid-cols-3 gap-6">
               {piece.data.gallery.map((img) => (
                 <Image
                   src={img}
                   alt=""
-                  widths={[300, 600]}
-                  sizes="30vw"
+                  widths={[320, 640]}
+                  sizes="28vw"
                   class="w-full h-auto bg-paper-dim"
                   loading="lazy"
                 />
@@ -61,33 +74,44 @@ const paragraphs = text.story.trim().split(/\n\s*\n/);
         }
       </div>
 
-      <div class="lg:pt-4 lg:sticky lg:top-12">
-        <p class="text-xs tracking-[0.28em] uppercase text-asagi-deep">
-          {t('piece.oneOfAKind')}
-        </p>
+      {/* ---------- Text ---------- */}
+      <div class="lg:sticky lg:top-14">
+        <p class="label">{t('piece.oneOfAKind')}</p>
+        <h1 class="mt-6 text-2xl sm:text-3xl leading-[1.6] text-sumi">{text.name}</h1>
 
-        <h1 class="mt-5 font-display text-4xl sm:text-5xl text-sumi">{text.name}</h1>
-
-        <dl class="mt-8 border-t border-ink/15 pt-6 text-sm">
-          <div class="flex gap-6">
-            <dt class="w-20 shrink-0 text-ink-soft">{t('piece.material')}</dt>
-            <dd class="text-ink">{text.material}</dd>
-          </div>
+        {/* Provenance — the organising idea of the site. */}
+        <dl class="mt-14 space-y-5">
+          {
+            rows.map((row) => (
+              <div class="grid grid-cols-[5.5rem_1fr] gap-6 items-baseline">
+                <dt class="label">{row.label}</dt>
+                <dd class="text-ink leading-[1.9]">
+                  {row.href ? (
+                    <a href={row.href} class="hover:text-ai transition-colors">
+                      {row.value}
+                    </a>
+                  ) : (
+                    row.value
+                  )}
+                </dd>
+              </div>
+            ))
+          }
         </dl>
 
-        <div class="mt-8 space-y-5 leading-relaxed">
+        <div class="mt-14 space-y-6 leading-[2] text-ink">
           {paragraphs.map((p) => <p>{p}</p>)}
         </div>
 
-        <div class="mt-10 border-t border-ink/15 pt-8">
-          <p class="text-sm text-ink-soft">
+        <div class="mt-16">
+          <p class="label">
             {piece.data.available ? t('piece.status.available') : t('piece.status.sold')}
           </p>
           {
             piece.data.available && (
               <a
                 href={`${path(lang, 'contact')}?piece=${encodeURIComponent(text.name)}`}
-                class="mt-5 inline-block border border-sumi px-7 py-3 text-sm text-sumi hover:bg-sumi hover:text-paper transition-colors"
+                class="mt-6 inline-block text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors"
               >
                 {t('piece.inquire')}
               </a>
@@ -96,5 +120,24 @@ const paragraphs = text.story.trim().split(/\n\s*\n/);
         </div>
       </div>
     </div>
+
+    {/* ---------- Pieces sharing provenance ---------- */}
+    {
+      [
+        { heading: t('piece.seeAlsoCloth'), items: sameCloth },
+        { heading: t('piece.seeAlsoMotif'), items: sameMotif },
+      ]
+        .filter((section) => section.items.length > 0)
+        .map((section) => (
+          <section class="pt-40">
+            <p class="label">{section.heading}</p>
+            <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
+              {section.items.slice(0, 3).map((p) => (
+                <PieceCard piece={p} lang={lang} />
+              ))}
+            </div>
+          </section>
+        ))
+    }
   </article>
 </Layout>

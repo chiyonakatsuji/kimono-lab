@@ -13,30 +13,27 @@ interface Props {
 const { piece, lang, eager = false } = Astro.props;
 const t = useTranslations(lang);
 const text = piece.data[lang];
+const prov = piece.data.provenance;
 ---
 
 <a href={path(lang, 'pieces', piece.id)} class="group block">
-  <div class="overflow-hidden bg-paper-dim">
-    <Image
-      src={piece.data.photo}
-      alt={text.alt}
-      widths={[400, 700, 1000]}
-      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-      class="w-full h-auto transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-      loading={eager ? 'eager' : 'lazy'}
-    />
-  </div>
+  <Image
+    src={piece.data.photo}
+    alt={text.alt}
+    widths={[420, 760, 1100]}
+    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+    class="w-full h-auto bg-paper-dim"
+    loading={eager ? 'eager' : 'lazy'}
+  />
 
-  <div class="mt-5">
-    <h3 class="text-lg text-sumi group-hover:text-asagi-deep transition-colors">
+  <div class="mt-7">
+    <h3 class="text-base text-sumi group-hover:text-ai transition-colors">
       {text.name}
     </h3>
-    <p class="mt-1 text-sm text-ink-soft">{text.material}</p>
+    <p class="label mt-2">{prov.cloth[lang]}</p>
     {
       !piece.data.available && (
-        <p class="mt-2 text-xs tracking-widest uppercase text-ink-soft">
-          {t('piece.status.sold')}
-        </p>
+        <p class="label mt-2 text-ink-soft/70">{t('piece.status.sold')}</p>
       )
     }
   </div>

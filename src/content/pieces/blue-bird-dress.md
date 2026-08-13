@@ -3,9 +3,30 @@ order: 1
 photo: ../../assets/pieces/blue-bird-dress.jpg
 available: true
 draft: false
+
+provenance:
+  clothKey: chirimen
+  motifKey: tsuru-matsu
+  cloth:
+    ja: 縮緬（ちりめん）
+    en: Chirimen — silk crêpe
+  motif:
+    ja: 松に飛び鶴・宝尽くし
+    en: Cranes in flight over pine, with takara-zukushi
+  meaning:
+    ja: 鶴は長寿、松は不変。ともに吉祥の文様とされます。
+    en: The crane for long life, the pine for constancy — both counted among the auspicious motifs.
+  # These two are factual claims about a real garment and I could not know them
+  # from the photograph. Ask your mother and replace them.
+  era:
+    ja: 《要確認》
+    en: (to confirm)
+  region:
+    ja: 《要確認》
+    en: (to confirm)
+
 ja:
   name: 青い鳥のドレス
-  material: 黒地 縮緬（ちりめん）／松に鶴文様
   alt: 黒い縮緬地のワンショルダー・ロングドレス。裾に松と飛び鶴の文様、腰に浅葱色の帯。
   story: |
     《この文章は仮のものです。お母様の言葉に差し替えてください。》
@@ -16,9 +37,9 @@ ja:
 
     片方の肩を出したワンショルダーに、帯地をそのまま用いた腰の切り替え。
     もとの一枚を裁ち直しているため、同じものは作れません。
+
 en:
   name: Blue Bird Dress
-  material: Black silk crêpe (chirimen), crane and pine motif
   alt: A one-shoulder floor-length dress in black silk crêpe, with cranes and pine at the hem and an asagi-blue sash at the waist.
   story: |
     *This text is a placeholder — replace it with your mother's own words.*

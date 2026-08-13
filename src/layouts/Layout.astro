@@ -6,7 +6,7 @@ import { useTranslations, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
-  title: string;
+  title?: string;
   description?: string;
 }
 
@@ -14,6 +14,7 @@ const { lang, title, description } = Astro.props;
 const t = useTranslations(lang);
 
 const fullTitle = title ? `${title}｜KIMONO.LAB` : `KIMONO.LAB — ${t('site.tagline')}`;
+const pathWithoutLang = Astro.url.pathname.replace(/^\/(ja|en)/, '');
 ---
 
 <!doctype html>
@@ -35,14 +36,15 @@ const fullTitle = title ? `${title}｜KIMONO.LAB` : `KIMONO.LAB — ${t('site.ta
     <meta property="og:locale" content={lang === 'ja' ? 'ja_JP' : 'en_US'} />
 
     <!-- Tell search engines the two languages are the same site. -->
-    <link rel="alternate" hreflang="ja" href={new URL(`/ja${Astro.url.pathname.replace(/^\/(ja|en)/, '')}`, Astro.site)} />
-    <link rel="alternate" hreflang="en" href={new URL(`/en${Astro.url.pathname.replace(/^\/(ja|en)/, '')}`, Astro.site)} />
+    <link rel="alternate" hreflang="ja" href={new URL(`/ja${pathWithoutLang}`, Astro.site)} />
+    <link rel="alternate" hreflang="en" href={new URL(`/en${pathWithoutLang}`, Astro.site)} />
 
+    <!-- Two families only: mincho for reading, a quiet sans for small labels. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Zen+Kaku+Gothic+New:wght@400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400&display=swap"
     />
   </head>
 

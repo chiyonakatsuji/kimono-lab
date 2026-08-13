@@ -27,20 +27,20 @@ const body = {
 ---
 
 <Layout lang={lang} title={t('nav.about')} description={body[1]}>
-  <section class="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:pt-24">
-    <h1 class="font-display text-4xl sm:text-5xl text-sumi">{t('nav.about')}</h1>
-  </section>
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+    <p class="label">{t('nav.about')}</p>
 
-  <section class="mx-auto max-w-6xl px-6 pb-16">
-    <div class="max-w-2xl space-y-6 text-lg leading-relaxed">
+    <div class="mt-12 max-w-xl space-y-8 text-lg leading-[2] text-ink">
       {body.map((p) => <p>{p}</p>)}
     </div>
 
-    <a
-      href={path(lang, 'contact')}
-      class="mt-12 inline-block border border-sumi px-7 py-3 text-sm text-sumi hover:bg-sumi hover:text-paper transition-colors"
-    >
-      {t('nav.contact')}
-    </a>
+    <div class="mt-16 flex gap-10">
+      <a href={path(lang, 'contact')} class="label hover:text-sumi transition-colors">
+        {t('nav.contact')}
+      </a>
+      <a href={path(lang, 'pieces')} class="label hover:text-sumi transition-colors">
+        {t('nav.pieces')}
+      </a>
+    </div>
   </section>
 </Layout>

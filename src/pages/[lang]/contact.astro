@@ -18,67 +18,64 @@ const FORM_ENDPOINT: string | null = null;
 // TODO: replace with the atelier's real address before launch.
 const EMAIL = 'hello@example.com';
 
-const labelClass = 'block text-sm text-ink-soft';
-const inputClass =
-  'mt-2 w-full border border-ink/20 bg-paper px-4 py-3 text-ink focus:border-asagi-deep focus:outline-none focus:ring-1 focus:ring-asagi-deep';
+const fieldClass =
+  'mt-3 w-full border-0 border-b border-ink/20 bg-transparent pb-3 text-ink focus:border-ai focus:outline-none';
 ---
 
 <Layout lang={lang} title={t('contact.heading')} description={t('contact.intro')}>
-  <section class="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:pt-24">
-    <h1 class="font-display text-4xl sm:text-5xl text-sumi">{t('contact.heading')}</h1>
-    <p class="mt-6 max-w-xl leading-relaxed">{t('contact.intro')}</p>
-  </section>
+  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+    <p class="label">{t('contact.heading')}</p>
+    <p class="mt-12 max-w-xl text-lg leading-[2] text-ink">{t('contact.intro')}</p>
 
-  <section class="mx-auto max-w-6xl px-6 pb-16">
-    <div class="max-w-xl">
+    <div class="mt-16 max-w-lg">
       {
         FORM_ENDPOINT ? (
-          <form action={FORM_ENDPOINT} method="POST" class="space-y-6">
+          <form action={FORM_ENDPOINT} method="POST" class="space-y-10">
             <div>
-              <label class={labelClass} for="name">
-                {t('contact.name')} <span class="text-shu">*</span>
+              <label class="label" for="name">
+                {t('contact.name')}
               </label>
-              <input class={inputClass} id="name" name="name" type="text" required />
+              <input class={fieldClass} id="name" name="name" type="text" required />
             </div>
 
             <div>
-              <label class={labelClass} for="email">
-                {t('contact.email')} <span class="text-shu">*</span>
+              <label class="label" for="email">
+                {t('contact.email')}
               </label>
-              <input class={inputClass} id="email" name="email" type="email" required />
+              <input class={fieldClass} id="email" name="email" type="email" required />
             </div>
 
             <div>
-              <label class={labelClass} for="subject">
+              <label class="label" for="subject">
                 {t('contact.subject')}
               </label>
-              <input class={inputClass} id="subject" name="subject" type="text" />
+              <input class={fieldClass} id="subject" name="subject" type="text" />
             </div>
 
             <div>
-              <label class={labelClass} for="message">
-                {t('contact.message')} <span class="text-shu">*</span>
+              <label class="label" for="message">
+                {t('contact.message')}
               </label>
-              <textarea class={inputClass} id="message" name="message" rows="7" required />
+              <textarea class={fieldClass} id="message" name="message" rows="6" required />
             </div>
 
             <button
               type="submit"
-              class="border border-sumi px-8 py-3 text-sm text-sumi hover:bg-sumi hover:text-paper transition-colors"
+              class="text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors"
             >
               {t('contact.send')}
             </button>
           </form>
         ) : (
-          <div class="border border-ink/15 bg-paper-dim/50 p-8">
-            <p class="text-sm text-ink-soft">
+          <div>
+            <p class="label leading-[1.9]">
               {lang === 'ja'
                 ? '《お問い合わせフォームは準備中です。送信先の設定が済むまで、メールアドレスを表示しています。》'
                 : '(The enquiry form is not connected yet. Until it is, this page shows an email address so that nothing gets lost.)'}
             </p>
             <a
               href={`mailto:${EMAIL}`}
-              class="mt-6 inline-block border-b border-sumi pb-1 text-lg text-sumi hover:text-asagi-deep hover:border-asagi-deep transition-colors"
+              class="mt-8 inline-block text-lg text-ink border-b border-ink/30 pb-1 hover:text-ai hover:border-ai transition-colors"
             >
               {EMAIL}
             </a>

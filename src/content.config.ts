@@ -1,37 +1,46 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+/** A value that has to be written once per language. */
+const bilingual = z.object({ ja: z.string(), en: z.string() });
+
 /**
  * One file per garment in src/content/pieces/.
- * Text is nested per language so a single file describes a piece in both
- * Japanese and English — this is the shape a CMS will later write to.
+ *
+ * `provenance` is the organising idea of the site, borrowed from how SHIRO
+ * sorts by ingredient origin: where the cloth came from is the story. The
+ * `clothKey` / `motifKey` slugs are what make pieces browsable by cloth and
+ * by motif — they must be lowercase ASCII with hyphens, since they become URLs.
  */
 const pieces = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/pieces' }),
   schema: ({ image }) =>
     z.object({
-      // Lower numbers appear first in the gallery.
       order: z.number().default(100),
       photo: image(),
-      // Extra photographs (details, back, lining).
       gallery: z.array(image()).default([]),
       available: z.boolean().default(true),
-      // Left out on purpose while the site is enquiry-only.
-      price: z.number().optional(),
-      // Hide from the site without deleting the file.
       draft: z.boolean().default(false),
-      ja: z.object({
-        name: z.string(),
-        material: z.string(),
-        story: z.string(),
-        alt: z.string(),
+
+      provenance: z.object({
+        // Slugs used for grouping and URLs.
+        clothKey: z
+          .string()
+          .regex(/^[a-z0-9-]+$/, 'clothKey must be lowercase letters, numbers and hyphens'),
+        motifKey: z
+          .string()
+          .regex(/^[a-z0-9-]+$/, 'motifKey must be lowercase letters, numbers and hyphens'),
+        // Displayed text.
+        cloth: bilingual,
+        motif: bilingual,
+        era: bilingual,
+        region: bilingual,
+        /** What the motif traditionally signifies. Optional. */
+        meaning: bilingual.optional(),
       }),
-      en: z.object({
-        name: z.string(),
-        material: z.string(),
-        story: z.string(),
-        alt: z.string(),
-      }),
+
+      ja: z.object({ name: z.string(), story: z.string(), alt: z.string() }),
+      en: z.object({ name: z.string(), story: z.string(), alt: z.string() }),
     }),
 });
 
