@@ -27,3 +27,7 @@ pnpm-debug.log*
 src/assets/instagram/
 src/content/pieces/ig-*.md
 
+# every env file except the committed template
+.env*
+!.env.example
+
