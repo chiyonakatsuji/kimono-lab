@@ -105,12 +105,17 @@ html[data-intro='pending'] .site-intro,
   align-items: center;
   gap: 2rem;
   padding: 0 2rem;
+  overflow: visible;
 }
 
 .site-intro__kl,
 .site-intro__word {
   display: block;
   width: auto;
+  max-width: none;
+  overflow: visible;
+  object-fit: contain;
+  flex-shrink: 0;
   opacity: 0;
   transform: scale(0.98);
   animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
