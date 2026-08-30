@@ -134,6 +134,8 @@ const introWebm = withBase('/intro.webm');
           var settled = false;
           var started = false;
           var fadeMs = 900;
+          var startGuard;
+          var safetyTimer;
 
           function markDone() {
             try {
@@ -156,6 +158,8 @@ const introWebm = withBase('/intro.webm');
             if (settled) return;
             settled = true;
             markDone();
+            clearTimeout(startGuard);
+            clearTimeout(safetyTimer);
             document.removeEventListener('keydown', onKey);
             overlay.classList.add('is-leaving');
             var finished = false;
@@ -169,15 +173,28 @@ const introWebm = withBase('/intro.webm');
             setTimeout(done, fadeMs);
           }
 
-          overlay.addEventListener('click', dismiss);
+          var skip = overlay.querySelector('.site-intro__skip');
+          if (skip) {
+            skip.addEventListener('click', function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              dismiss();
+            });
+          }
           document.addEventListener('keydown', onKey);
           video.addEventListener('ended', dismiss);
           video.addEventListener('error', dismiss);
           video.addEventListener('playing', function () {
             started = true;
           });
+          video.addEventListener('loadedmetadata', function () {
+            var ms = Math.ceil((video.duration || 12) * 1000) + 2500;
+            safetyTimer = setTimeout(function () {
+              if (!settled) dismiss();
+            }, ms);
+          });
 
-          setTimeout(function () {
+          startGuard = setTimeout(function () {
             if (!started) dismiss();
           }, 1800);
 

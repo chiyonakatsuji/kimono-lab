@@ -91,7 +91,6 @@ html[data-intro='pending'] {
 
 html[data-intro='pending'] .site-intro {
   display: flex;
-  cursor: pointer;
 }
 
 .site-intro.is-leaving {
