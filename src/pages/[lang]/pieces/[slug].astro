@@ -49,6 +49,10 @@ const rows = prov
 
 const sameCloth = relatedTo(piece, pieces, 'cloth');
 const sameMotif = relatedTo(piece, pieces, 'motif');
+
+const galleryCount = piece.data.gallery.length;
+const galleryCols =
+  galleryCount <= 1 ? 'grid-cols-1' : galleryCount === 2 ? 'grid-cols-2' : 'grid-cols-3';
 ---
 
 <Layout lang={lang} title={text.name} description={prov.cloth[lang]}>
@@ -71,14 +75,14 @@ const sameMotif = relatedTo(piece, pieces, 'motif');
 
         {
           piece.data.gallery.length > 0 && (
-            <div class="mt-10 grid grid-cols-3 gap-6">
+            <div class:list={['mt-10 grid gap-6', galleryCols]}>
               {piece.data.gallery.map((img) => (
                 <Image
                   src={img}
                   alt=""
                   widths={[320, 640]}
                   sizes="28vw"
-                  class="w-full h-auto bg-paper-dim"
+                  class="photo-frame"
                   loading="lazy"
                 />
               ))}

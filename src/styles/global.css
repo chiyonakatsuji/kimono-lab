@@ -59,6 +59,18 @@
   line-height: 1.9;
 }
 
+/* Side-by-side photographs share one frame. 2:3 is the lookbook ratio.
+   Wider or taller sources are cropped to that box so row heights match —
+   never letterboxed or shrunk. Focus sits slightly above centre: side-crops
+   keep a full-length hem, and a little extra headroom stays in frame. */
+@utility photo-frame {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: center 40%;
+  background-color: var(--color-paper-dim);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
