@@ -66,6 +66,7 @@ export const ui = {
     'contact.send': '送信',
     'footer.rights': 'All rights reserved.',
     skip: '本文へ移動',
+    'intro.skip': 'スキップ',
   },
   en: {
     'site.tagline': 'Your Beauty, Your Story',
@@ -115,6 +116,7 @@ export const ui = {
     'contact.send': 'Send',
     'footer.rights': 'All rights reserved.',
     skip: 'Skip to content',
+    'intro.skip': 'Skip',
   },
 } as const satisfies Record<Lang, Record<string, string>>;
 

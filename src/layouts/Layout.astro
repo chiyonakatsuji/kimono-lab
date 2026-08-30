@@ -15,6 +15,8 @@ const t = useTranslations(lang);
 
 const fullTitle = title ? `${title}｜KIMONO.LAB` : `KIMONO.LAB — ${t('site.tagline')}`;
 const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
+const introMp4 = withBase('/intro.mp4');
+const introWebm = withBase('/intro.webm');
 ---
 
 <!doctype html>
@@ -46,9 +48,39 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400&display=swap"
     />
+
+    <!-- Gate the intro before first paint so the page does not flash, then
+         overlay, on a cold visit — and so later loads skip it instantly. -->
+    <script is:inline>
+      (function () {
+        try {
+          if (
+            sessionStorage.getItem('kimono-lab.intro') ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ) {
+            document.documentElement.dataset.intro = 'done';
+          } else {
+            document.documentElement.dataset.intro = 'pending';
+          }
+        } catch (e) {
+          document.documentElement.dataset.intro = 'done';
+        }
+      })();
+    </script>
   </head>
 
   <body class="min-h-screen flex flex-col">
+    <div
+      id="site-intro"
+      class="site-intro"
+      data-mp4={introMp4}
+      data-webm={introWebm}
+      aria-hidden="true"
+    >
+      <video muted playsinline disablepictureinpicture disableremoteplayback></video>
+      <button type="button" class="site-intro__skip">{t('intro.skip')}</button>
+    </div>
+
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-sumi focus:text-paper focus:px-4 focus:py-2"
@@ -63,5 +95,116 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
     </main>
 
     <Footer lang={lang} />
+
+    <script is:inline>
+      (function () {
+        var KEY = 'kimono-lab.intro';
+
+        function shouldSkip() {
+          try {
+            return !!(
+              sessionStorage.getItem(KEY) ||
+              window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            );
+          } catch (e) {
+            return true;
+          }
+        }
+
+        function bootIntro() {
+          var overlay = document.getElementById('site-intro');
+          if (!overlay) return;
+
+          if (shouldSkip()) {
+            document.documentElement.dataset.intro = 'done';
+            overlay.remove();
+            return;
+          }
+
+          if (overlay.getAttribute('data-bound')) return;
+          overlay.setAttribute('data-bound', '1');
+          document.documentElement.dataset.intro = 'pending';
+
+          var video = overlay.querySelector('video');
+          if (!video) {
+            overlay.remove();
+            return;
+          }
+
+          var settled = false;
+          var started = false;
+          var fadeMs = 900;
+
+          function markDone() {
+            try {
+              sessionStorage.setItem(KEY, '1');
+            } catch (e) {}
+            document.documentElement.dataset.intro = 'done';
+          }
+
+          function cleanupVideo() {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+          }
+
+          function onKey(e) {
+            if (e.key === 'Escape') dismiss();
+          }
+
+          function dismiss() {
+            if (settled) return;
+            settled = true;
+            markDone();
+            document.removeEventListener('keydown', onKey);
+            overlay.classList.add('is-leaving');
+            var finished = false;
+            function done() {
+              if (finished) return;
+              finished = true;
+              cleanupVideo();
+              overlay.remove();
+            }
+            overlay.addEventListener('transitionend', done);
+            setTimeout(done, fadeMs);
+          }
+
+          overlay.addEventListener('click', dismiss);
+          document.addEventListener('keydown', onKey);
+          video.addEventListener('ended', dismiss);
+          video.addEventListener('error', dismiss);
+          video.addEventListener('playing', function () {
+            started = true;
+          });
+
+          setTimeout(function () {
+            if (!started) dismiss();
+          }, 1800);
+
+          var webm = overlay.getAttribute('data-webm');
+          var mp4 = overlay.getAttribute('data-mp4');
+          if (webm && video.canPlayType('video/webm; codecs="vp9"')) {
+            video.src = webm;
+          } else if (mp4) {
+            video.src = mp4;
+          } else {
+            dismiss();
+            return;
+          }
+
+          video.muted = true;
+          video.playsInline = true;
+          var playAttempt = video.play();
+          if (playAttempt && playAttempt.catch) {
+            playAttempt.catch(function () {
+              dismiss();
+            });
+          }
+        }
+
+        bootIntro();
+        document.addEventListener('astro:page-load', bootIntro);
+      })();
+    </script>
   </body>
 </html>

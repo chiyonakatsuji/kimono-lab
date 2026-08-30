@@ -71,6 +71,61 @@
   background-color: var(--color-paper-dim);
 }
 
+/* Session intro: paper overlay, figure contained, then a quiet fade to the page.
+   Visibility is gated by html[data-intro], set in <head> before first paint. */
+.site-intro {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-paper);
+  opacity: 1;
+  transition: opacity 0.75s ease;
+}
+
+html[data-intro='pending'] {
+  overflow: hidden;
+}
+
+html[data-intro='pending'] .site-intro {
+  display: flex;
+  cursor: pointer;
+}
+
+.site-intro.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.site-intro video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.site-intro__skip {
+  position: absolute;
+  right: 2rem;
+  bottom: 1.75rem;
+  font-family: var(--font-label);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  background: none;
+  border: 0;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.site-intro__skip:hover,
+.site-intro__skip:focus-visible {
+  color: var(--color-sumi);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
