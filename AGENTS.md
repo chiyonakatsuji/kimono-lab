@@ -16,10 +16,10 @@ recoverable from the code.
 npm run dev          # dev server on :4321
 npm run build        # static build to dist/
 npm run sync         # pull posts from Instagram into src/content/pieces/
-npm run sync:test    # 21 assertions on the caption parser
+npm run sync:test    # 42 assertions on the caption parser
 npm run build:synced # sync then build (use this in CI)
 
-node scripts/sync-instagram.e2e.mjs          # 18 end-to-end sync checks
+node scripts/sync-instagram.e2e.mjs          # 27 end-to-end sync checks
 node scripts/sync-instagram.e2e.mjs --keep    # ...leaving generated files behind
 ```
 
@@ -139,27 +139,38 @@ not source.
 - Feed source is auto-detected from `.env`: `BEHOLD_FEED_URL` (preferred — the
   service refreshes the Meta token, so the feed does not silently empty every
   60 days) or `IG_USER_ID` + `IG_ACCESS_TOKEN` for the Graph API directly.
-- `IG_REQUIRED_TAG` limits syncing to posts carrying one hashtag. Without it,
-  pop-up and event announcements become products; there is a keyword filter as
-  a backstop but it is only pattern matching.
+- `IG_REQUIRED_TAG` limits syncing to posts carrying one hashtag. It is not
+  currently set: the backstop filter is doing the job on its own, because a post
+  has to *name a garment or a cloth* to be imported at all, not merely avoid the
+  announcement keywords. Set the tag if that ever lets something through.
 - With nothing configured the script exits 0 and changes nothing, so a deploy
   never fails because the feed is down. Keep that property.
 - A feed that **is** configured but errors exits 1, so a hand-run `npm run sync`
   reports an expired token. `SYNC_ALLOW_FAILURE=1` downgrades that to a warning;
   only CI sets it, so the site keeps publishing through a dead feed.
-- Caption parsing lives in `scripts/lib/caption.mjs`. The keyword tables for
-  cloth and motif were written against invented captions and have **never been
-  run against the atelier's real posts** — expect to tune them.
+- Caption parsing lives in `scripts/lib/caption.mjs`. The keyword tables have
+  now been run against the real feed and tuned to her house style: she names the
+  kimono type (`小紋`, `振袖`) rather than the weave, appends `Size Free S-XL` to
+  the name line, and writes the Japanese and English names as adjacent lines
+  rather than as separate paragraphs. Extend the tables as her vocabulary grows;
+  the tests in `sync-instagram.test.mjs` cover each of those shapes.
+- A reel's `mediaUrl` is an `.mp4`, so video posts sync from their poster frame,
+  and `downloadImage` refuses anything that is not `image/*`. Without that a
+  video lands as a `.jpg` and fails the **Astro build** rather than the sync,
+  which is far harder to trace. Keep that guard.
 
 ---
 
 ## Open work
 
-- [ ] `.env` is not set up yet, and no `BEHOLD_FEED_URL` secret is set on the
-      repo either. **Instagram sync has never run against a real feed.** Run
-      `npm run sync` locally with a real feed URL and read the generated
-      `ig-*.md` before letting CI publish them: the cloth and motif keyword
-      tables were written against invented captions.
+- [ ] The Behold free plan returns only the **6 most recent posts**, and three of
+      those six were reels about the atelier rather than garments. A garment
+      drops out of the feed as soon as six newer posts exist, and the sync then
+      deletes its page. Adopt anything worth keeping by changing `source` to
+      `atelier`, or move to a paid plan for a longer window.
+- [ ] Two of her garment captions name no motif, so those pieces publish with a
+      motif of `《要確認》` / `(to confirm)`. Fill them in by hand after adopting,
+      or ask her to name the motif in the caption.
 - [ ] Era and region for both pieces are `《要確認》`.
 - [ ] All About-page copy and both piece stories are placeholders.
 - [ ] `src/lib/site.ts` — `EMAIL` is `null`; hotel boutique names/floors unconfirmed.

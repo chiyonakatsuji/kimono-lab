@@ -94,11 +94,27 @@ function normalisePosts(feed) {
     // `mediaUrl` is the unoptimised original, so it carries the most detail.
     // Behold's `sizes.full` is capped at 2000px and is the fallback. Both are
     // still bounded by whatever Instagram stored on upload.
-    const best = (node) =>
-      node?.mediaUrl ?? node?.media_url ?? node?.sizes?.full?.mediaUrl ?? node?.sizes?.large?.mediaUrl;
+    const best = (node) => {
+      const kind = String(node?.mediaType ?? node?.media_type ?? '').toUpperCase();
+      // A reel's `mediaUrl` is an .mp4. Only its poster frame is an image, and
+      // Behold's `sizes` are stills even for video.
+      if (kind === 'VIDEO') {
+        return (
+          node?.thumbnailUrl ??
+          node?.thumbnail_url ??
+          node?.sizes?.full?.mediaUrl ??
+          node?.sizes?.large?.mediaUrl
+        );
+      }
+      return node?.mediaUrl ?? node?.media_url ?? node?.sizes?.full?.mediaUrl ?? node?.sizes?.large?.mediaUrl;
+    };
 
-    push(best(p));
-    for (const child of p.children?.data ?? p.children ?? []) push(best(child));
+    // A carousel's own `mediaUrl` repeats its first child under a differently
+    // signed URL, which the dedupe above cannot see, so the lead photo would
+    // appear again in the gallery. Prefer the children when there are any.
+    const children = p.children?.data ?? p.children ?? [];
+    if (children.length) for (const child of children) push(best(child));
+    if (!images.length) push(best(p));
     if (!images.length) push(p.thumbnailUrl ?? p.thumbnail_url);
 
     return {
@@ -129,6 +145,9 @@ async function downloadImage(url, destNoExt) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`image download failed: ${res.status}`);
   const type = res.headers.get('content-type') ?? '';
+  // Saving a video as .jpg fails the Astro build rather than the sync, which is
+  // a far harder failure to trace back to here. Refuse anything but an image.
+  if (!type.startsWith('image/')) throw new Error(`not an image (${type || 'no content-type'})`);
   const ext = type.includes('png') ? '.png' : type.includes('webp') ? '.webp' : '.jpg';
   const dest = destNoExt + ext;
   await writeFile(dest, Buffer.from(await res.arrayBuffer()));
@@ -190,7 +209,7 @@ function buildMarkdown(post, parsed, files, order) {
   for (const lang of ['ja', 'en']) {
     lines.push(
       `${lang}:`,
-      `  name: ${quote(name)}`,
+      `  name: ${quote(parsed.names?.[lang] || name)}`,
       `  alt: ${quote(alt)}`,
       `  story: ${yamlBlock(parsed[lang])}`,
     );
