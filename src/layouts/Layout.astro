@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { useTranslations, type Lang } from '../i18n/ui';
+import { useTranslations, withBase, stripBase, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -14,7 +14,7 @@ const { lang, title, description } = Astro.props;
 const t = useTranslations(lang);
 
 const fullTitle = title ? `${title}｜KIMONO.LAB` : `KIMONO.LAB — ${t('site.tagline')}`;
-const pathWithoutLang = Astro.url.pathname.replace(/^\/(ja|en)/, '');
+const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
 ---
 
 <!doctype html>
@@ -23,11 +23,11 @@ const pathWithoutLang = Astro.url.pathname.replace(/^\/(ja|en)/, '');
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
 
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
-    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="canonical" href={new URL(withBase(stripBase(Astro.url.pathname)), Astro.site)} />
 
     <meta property="og:site_name" content="KIMONO.LAB" />
     <meta property="og:title" content={fullTitle} />
@@ -36,8 +36,8 @@ const pathWithoutLang = Astro.url.pathname.replace(/^\/(ja|en)/, '');
     <meta property="og:locale" content={lang === 'ja' ? 'ja_JP' : 'en_US'} />
 
     <!-- Tell search engines the two languages are the same site. -->
-    <link rel="alternate" hreflang="ja" href={new URL(`/ja${pathWithoutLang}`, Astro.site)} />
-    <link rel="alternate" hreflang="en" href={new URL(`/en${pathWithoutLang}`, Astro.site)} />
+    <link rel="alternate" hreflang="ja" href={new URL(withBase(`/ja${pathWithoutLang}`), Astro.site)} />
+    <link rel="alternate" hreflang="en" href={new URL(withBase(`/en${pathWithoutLang}`), Astro.site)} />
 
     <!-- Two families only: mincho for reading, a quiet sans for small labels. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

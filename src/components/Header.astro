@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import wordmark from '../assets/logo-wordmark.png';
-import { useTranslations, path, type Lang } from '../i18n/ui';
+import { useTranslations, path, withBase, stripBase, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
@@ -11,8 +11,10 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 const other: Lang = lang === 'ja' ? 'en' : 'ja';
 
+const pathname = stripBase(Astro.url.pathname);
+
 // Keep the visitor on the same page when they switch language.
-const samePageOtherLang = `/${other}${Astro.url.pathname.replace(/^\/(ja|en)/, '')}`;
+const samePageOtherLang = withBase(`/${other}${pathname.replace(/^\/(ja|en)/, '')}`);
 
 const links = [
   { href: path(lang, 'pieces'), label: t('nav.pieces') },
@@ -20,7 +22,7 @@ const links = [
   { href: path(lang, 'contact'), label: t('nav.contact') },
 ];
 
-const current = Astro.url.pathname.replace(/\/$/, '');
+const current = withBase(pathname).replace(/\/$/, '');
 ---
 
 <!-- No bottom border: the space below does the separating.

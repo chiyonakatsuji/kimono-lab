@@ -126,8 +126,31 @@ export function useTranslations(lang: Lang) {
   };
 }
 
+/**
+ * The site is served either from a domain root or from a sub-path, depending
+ * on the host (a GitHub Pages project site lives under /kimono-lab/). Astro
+ * exposes the configured `base` as BASE_URL, always with a trailing slash.
+ */
+const basePrefix = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+/** Prefixes a root-relative path with the deploy base. */
+export function withBase(rest: string): string {
+  return `${basePrefix}${rest}`;
+}
+
+/**
+ * Removes the deploy base from a pathname, so comparing the current route
+ * against a link reads the same however the site is hosted.
+ */
+export function stripBase(pathname: string): string {
+  if (basePrefix && pathname.startsWith(basePrefix)) {
+    return pathname.slice(basePrefix.length) || '/';
+  }
+  return pathname;
+}
+
 /** Builds a locale-prefixed path, e.g. path('ja', 'pieces') -> '/ja/pieces' */
 export function path(lang: Lang, ...segments: string[]): string {
   const tail = segments.filter(Boolean).join('/');
-  return tail ? `/${lang}/${tail}` : `/${lang}/`;
+  return withBase(tail ? `/${lang}/${tail}` : `/${lang}/`);
 }
