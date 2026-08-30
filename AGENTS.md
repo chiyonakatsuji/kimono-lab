@@ -16,14 +16,14 @@ recoverable from the code.
 npm run dev          # dev server on :4321
 npm run build        # static build to dist/
 npm run sync         # pull posts from Instagram into src/content/pieces/
-npm run sync:test    # 42 assertions on the caption parser
+npm run sync:test    # caption-parser assertions
+npm run sync:e2e     # end-to-end sync against a local fake feed
 npm run build:synced # sync then build (use this in CI)
 
-node scripts/sync-instagram.e2e.mjs          # 27 end-to-end sync checks
-node scripts/sync-instagram.e2e.mjs --keep    # ...leaving generated files behind
+npm run sync:e2e -- --keep   # ...leaving generated files behind
 ```
 
-Run `npm run sync:test` and the e2e script after touching anything under
+Run `npm run sync:test` and `npm run sync:e2e` after touching anything under
 `scripts/`. They are fast and they catch real breakage.
 
 ---
@@ -134,8 +134,17 @@ not source.
 
 - Generated entries carry `source: instagram` and are **overwritten on every
   run**. Hand edits are lost.
-- To adopt an entry permanently, change `source` to `atelier`. The script then
-  leaves it alone and stops deleting it.
+- To adopt an entry permanently: change `source` to `atelier`, rename
+  `ig-<shortcode>.md` to a real slug, and move its images out of
+  `src/assets/instagram/` into `src/assets/pieces/` (update `photo` / `gallery`).
+  **Keep the `permalink`.** The next sync matches that permalink's shortcode
+  (`/p/<code>/` or `/reel/<code>/`) and will not write a second `ig-*.md` for
+  the same post, and will not delete the adopted file. Changing `source` alone
+  (adopting in place, still named `ig-*`) also works — the filename is a
+  fallback match. Without the permalink match, renaming used to recreate
+  `ig-<code>.md` and list the garment twice.
+- Lookbook pieces keep `order` 1–2. The three adopted pieces follow feed
+  recency: 3 furisode, 4 komon camisole, 5 komon dress.
 - Feed source is auto-detected from `.env`: `BEHOLD_FEED_URL` (preferred — the
   service refreshes the Meta token, so the feed does not silently empty every
   60 days) or `IG_USER_ID` + `IG_ACCESS_TOKEN` for the Graph API directly.
@@ -163,27 +172,26 @@ not source.
 
 ## Open work
 
-- [ ] The Behold free plan returns only the **6 most recent posts**, and three of
-      those six were reels about the atelier rather than garments. A garment
-      drops out of the feed as soon as six newer posts exist, and the sync then
-      deletes its page. Adopt anything worth keeping by changing `source` to
-      `atelier`, or move to a paid plan for a longer window.
-- [ ] Two of her garment captions name no motif, so those pieces publish with a
-      motif of `《要確認》` / `(to confirm)`. Fill them in by hand after adopting,
-      or ask her to name the motif in the caption.
-- [ ] Era and region for both pieces are `《要確認》`.
-- [ ] All About-page copy and both piece stories are placeholders.
+- [ ] The Behold free plan returns only the **6 most recent posts**. A new
+      garment still has to be adopted (permalink kept, images moved out of
+      `src/assets/instagram/`) before it falls out of that window, or the feed
+      needs a paid plan. The three garments that were in the feed have been
+      adopted.
+- [ ] Two adopted pieces name no motif in the caption, and the photographs were
+      not enough to name a traditional pattern: `komon-dress` and
+      `komon-camisole-dress` still have motif `《要確認》` / `(to confirm)`.
+- [ ] Era and region for every piece are `《要確認》`.
+- [ ] All About-page copy and the two lookbook piece stories are placeholders.
+      Adopted-piece stories are caption-only (plus the site-wide one-of-a-kind
+      remake line) — they still want the atelier's own words.
 - [ ] `src/lib/site.ts` — `EMAIL` is `null`; hotel boutique names/floors unconfirmed.
 - [ ] `src/assets` is **48.6 MB** in git and grows with each garment. Consider
       downscaling committed originals to ~1800px, keeping full-res in OneDrive.
+      Adopted Instagram stills are already ~1080px.
 - [ ] `src/assets/shirasagi.png` has a border baked in (looks like a screenshot
       export) and is currently unused. Re-export from `KIMONO.LAB.kra`.
 - [ ] `src/pages/review.astro` is a development contact sheet — **delete before
       launch**.
-- [ ] A Behold free feed only returns the 6 most recent posts, so the synced
-      gallery cannot grow past six. To keep a piece permanently, rename its
-      `ig-*.md` to a real slug and commit it — the gitignore only covers `ig-*`,
-      and its images have to move out of `src/assets/instagram/` too.
 - [ ] Two unused videos in `public/video/` — nobody has confirmed what they show.
 
 ---

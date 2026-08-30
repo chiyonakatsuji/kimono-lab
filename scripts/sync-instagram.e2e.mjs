@@ -10,7 +10,8 @@
 
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { readFile, readdir, unlink, stat } from 'node:fs/promises';
+import { readFile, writeFile, readdir, unlink, stat } from 'node:fs/promises';
+import { unlinkSync } from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -79,8 +80,67 @@ const FEED = {
       thumbnailUrl: `http://127.0.0.1:${PORT}/img/e.jpg`,
       sizes: { full: { mediaUrl: `http://127.0.0.1:${PORT}/img/e-full.jpg` } },
     },
+    // The two posts below are already owned by a hand-edited entry, so the sync
+    // must leave both the post and the entry alone. Without that a post stays
+    // in the feed after adoption and the garment is published twice.
+    {
+      id: '666',
+      permalink: 'https://www.instagram.com/p/Renamed66/',
+      mediaType: 'IMAGE',
+      timestamp: '2026-06-10T10:00:00+0000',
+      caption: `鶴のドレス\n正絹に鶴の文様。\n#kimonolab_piece`,
+      sizes: { full: { mediaUrl: `http://127.0.0.1:${PORT}/img/f.jpg` } },
+    },
+    {
+      id: '777',
+      permalink: 'https://www.instagram.com/p/InPlace77/',
+      mediaType: 'IMAGE',
+      timestamp: '2026-06-01T10:00:00+0000',
+      caption: `牡丹のドレス\n正絹に牡丹の文様。\n#kimonolab_piece`,
+      sizes: { full: { mediaUrl: `http://127.0.0.1:${PORT}/img/g.jpg` } },
+    },
   ],
 };
+
+// Adoption fixtures, written before the sync runs. `e2e-adopted-renamed.md` is
+// the real case: a synced entry copied to a human slug, keeping its permalink.
+// `ig-inplace77.md` is the same entry adopted where it stood, identified only by
+// its filename. Both are removed again at the end.
+const ADOPTED_RENAMED = 'e2e-adopted-renamed.md';
+const ADOPTED_IN_PLACE = 'ig-inplace77.md';
+const SENTINEL = 'e2e-sentinel-must-survive';
+const FIXTURES = [ADOPTED_RENAMED, ADOPTED_IN_PLACE];
+// Only these were produced by this run. Do not sweep every ig-* in the folder —
+// a real synced entry (or an adopted leftover) must survive the test.
+const GENERATED_MD = ['ig-abcdefg123.md', 'ig-carousel77.md', 'ig-reel42.md'];
+const GENERATED_IMG_PREFIXES = ['ig-abcdefg123-', 'ig-carousel77-', 'ig-reel42-'];
+
+function removeFixtures() {
+  for (const f of FIXTURES) {
+    try {
+      unlinkSync(path.join(CONTENT_DIR, f));
+    } catch {
+      /* already gone */
+    }
+  }
+}
+
+// Neither fixture is a valid piece — they carry no photo — so leaving one behind
+// would fail the next Astro build. Register before writing, so a crash between
+// the two writes still cleans up. Removed even with --keep, which is there to
+// inspect generated output rather than these.
+process.on('exit', removeFixtures);
+
+await writeFile(
+  path.join(CONTENT_DIR, ADOPTED_RENAMED),
+  `---\nsource: atelier\npermalink: "https://www.instagram.com/p/Renamed66/"\n# ${SENTINEL}\n---\n`,
+  'utf8',
+);
+await writeFile(
+  path.join(CONTENT_DIR, ADOPTED_IN_PLACE),
+  `---\nsource: atelier\n# ${SENTINEL}\n---\n`,
+  'utf8',
+);
 
 const jpeg = await readFile(SAMPLE);
 
@@ -128,6 +188,8 @@ function check(name, cond, detail = '') {
   }
 }
 
+check('sync exited 0', code === 0);
+
 const files = (await readdir(CONTENT_DIR)).filter((f) => f.startsWith('ig-'));
 const images = (await readdir(IMAGE_DIR).catch(() => [])).filter((f) => f.startsWith('ig-'));
 
@@ -169,9 +231,36 @@ if (files.includes('ig-reel42.md')) {
   check('kimono type read as the cloth', /clothKey: komon/.test(md));
 }
 
-check('images downloaded', images.length >= 4, `saw ${images.length}: ${images.join(', ')}`);
+// ------------------------------------------------------- adopted posts skipped
+
+check(
+  'adopted post not written again under its generated slug',
+  !files.includes('ig-renamed66.md'),
+  `saw: ${files.join(', ')}`,
+);
+check(
+  'adopted post images not downloaded again',
+  !images.some((f) => f.startsWith('ig-renamed66-')),
+  `saw: ${images.join(', ')}`,
+);
+{
+  const md = await readFile(path.join(CONTENT_DIR, ADOPTED_RENAMED), 'utf8').catch(() => '');
+  check('renamed adoption survives the sync', md.includes(SENTINEL));
+}
+{
+  const md = await readFile(path.join(CONTENT_DIR, ADOPTED_IN_PLACE), 'utf8').catch(() => '');
+  check('adoption in place is not overwritten', md.includes(SENTINEL), md.slice(0, 120));
+}
+check(
+  'adopted post in place has no images downloaded',
+  !images.some((f) => f.startsWith('ig-inplace77-')),
+  `saw: ${images.join(', ')}`,
+);
+
+const generatedImages = images.filter((f) => GENERATED_IMG_PREFIXES.some((p) => f.startsWith(p)));
+check('images downloaded', generatedImages.length >= 4, `saw ${generatedImages.length}: ${generatedImages.join(', ')}`);
 check('no video saved as an image', !images.some((f) => f.startsWith('ig-reel42-2')));
-for (const f of images) {
+for (const f of generatedImages) {
   const s = await stat(path.join(IMAGE_DIR, f));
   check(`${f} is a non-trivial image`, s.size > 10000, `${s.size} bytes`);
 }
@@ -179,12 +268,15 @@ for (const f of images) {
 // ------------------------------------------------------------------- cleanup
 
 if (!KEEP) {
-  for (const f of files) await unlink(path.join(CONTENT_DIR, f));
-  for (const f of images) await unlink(path.join(IMAGE_DIR, f));
+  for (const f of GENERATED_MD) {
+    await unlink(path.join(CONTENT_DIR, f)).catch(() => {});
+  }
+  for (const f of generatedImages) await unlink(path.join(IMAGE_DIR, f));
   console.log('\ncleaned up generated files');
 } else {
   console.log('\n--keep: generated files left in place');
 }
+removeFixtures();
 
 console.log(failed ? `\n${failed} check(s) failed\n` : '\nall checks passed\n');
 process.exit(failed ? 1 : 0);

@@ -12,6 +12,7 @@
     "astro": "astro",
     "sync": "node --env-file-if-exists=.env scripts/sync-instagram.mjs",
     "sync:test": "node scripts/sync-instagram.test.mjs",
+    "sync:e2e": "node scripts/sync-instagram.e2e.mjs",
     "build:synced": "npm run sync && astro build"
   },
   "dependencies": {

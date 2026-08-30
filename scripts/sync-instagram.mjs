@@ -18,6 +18,8 @@
  *  - Entries are marked `source: instagram` and are REWRITTEN on every run.
  *    Hand edits to them are lost; edit the Instagram caption instead, or
  *    change `source` to `atelier` to adopt the entry and stop it being synced.
+ *    An adopted entry is matched back to its post by the `permalink` it keeps,
+ *    so renaming it to a real slug does not make the garment appear twice.
  *  - Instagram serves images at about 1080px. The site renders up to 1600px,
  *    so these will be softer than the atelier's own files. That is a known
  *    consequence of syncing, not a bug.
@@ -135,10 +137,46 @@ function normalisePosts(feed) {
 
 // ------------------------------------------------------------------- helpers
 
+/** The shortcode in an Instagram post URL: /p/<code>/ or /reel/<code>/. */
+function shortcodeOf(url) {
+  const code = String(url ?? '').match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/)?.[1];
+  return code ? code.toLowerCase() : null;
+}
+
 /** Stable, readable slug: the permalink shortcode if we have one, else the id. */
 function slugFor(post) {
-  const code = post.permalink?.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/)?.[1];
-  return `ig-${(code ?? post.id).toLowerCase()}`;
+  return `ig-${shortcodeOf(post.permalink) ?? String(post.id).toLowerCase()}`;
+}
+
+/**
+ * Posts a hand-owned entry has already taken over, keyed by shortcode.
+ *
+ * Adopting a synced piece means copying it to a real slug, moving its images
+ * into a committed folder and setting `source: atelier`. The post itself does
+ * not change, so without this the next sync would write `ig-<code>.md` again
+ * and the same garment would appear twice in the gallery. The `permalink` an
+ * adopted file keeps is what ties it back to the post it came from.
+ */
+async function adoptedByShortcode() {
+  const owners = new Map();
+
+  for (const file of await readdir(CONTENT_DIR)) {
+    if (!file.endsWith('.md')) continue;
+    const body = await readFile(path.join(CONTENT_DIR, file), 'utf8');
+    // `source` defaults to atelier in the schema, so only an explicit
+    // `instagram` marks an entry this script still owns.
+    if (/^source:\s*instagram\s*$/m.test(body)) continue;
+
+    const permalink = body.match(/^permalink:\s*['"]?(\S+?)['"]?\s*$/m)?.[1];
+    const codes = [
+      shortcodeOf(permalink),
+      // An entry adopted in place, without being renamed, has no other handle.
+      file.startsWith('ig-') ? file.slice(3, -3).toLowerCase() : null,
+    ];
+    for (const code of codes) if (code && !owners.has(code)) owners.set(code, file);
+  }
+
+  return owners;
 }
 
 async function downloadImage(url, destNoExt) {
@@ -240,12 +278,23 @@ async function main() {
 
   log(`${posts.length} post(s) in feed`);
 
+  const adopted = await adoptedByShortcode();
   const kept = new Set();
   const skipped = [];
+  const claimed = [];
   let order = 100;
 
   for (const post of posts) {
     const slug = slugFor(post);
+
+    // Checked before anything else, so an adopted post is not re-downloaded
+    // and never gets a second entry under its old generated slug.
+    const code = shortcodeOf(post.permalink) ?? String(post.id).toLowerCase();
+    const owner = adopted.get(code);
+    if (owner) {
+      claimed.push(`${slug} → ${owner}`);
+      continue;
+    }
 
     if (REQUIRED_TAG) {
       // Use the feed's own extracted hashtags when present, else parse them.
@@ -304,6 +353,10 @@ async function main() {
     log(`removed ${file} — no longer in the feed`);
   }
 
+  if (claimed.length) {
+    log(`${claimed.length} post(s) already adopted, left untouched:`);
+    for (const c of claimed) log('  -', c);
+  }
   if (skipped.length) {
     log(`skipped ${skipped.length}:`);
     for (const s of skipped) log('  -', s);
