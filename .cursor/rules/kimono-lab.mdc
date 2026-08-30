@@ -1,0 +1,23 @@
+---
+description: KIMONO.LAB project context, conventions and known traps
+alwaysApply: true
+---
+
+Read `AGENTS.md` in the repository root before making changes. It is the single
+source of truth for this project's conventions, and it records context that
+cannot be recovered from the code.
+
+The points most likely to trip you up:
+
+- **Tailwind is v4.** Tokens and custom utilities are in `src/styles/global.css`
+  via `@theme` / `@utility`. There is no `tailwind.config.js` — do not create one.
+- **Content collections config is `src/content.config.ts`**, using the `glob()`
+  loader from `astro/loaders`.
+- `src/content/pieces/ig-*.md` and `src/assets/instagram/` are **generated** by
+  `npm run sync` and gitignored. Never edit them by hand.
+- **Never invent an era or region for a garment.** Unknowns are `《要確認》`.
+  Placeholder copy is marked and is waiting on the atelier's own words.
+- `.label` uppercases and tracks out to 0.22em — never use it on a full
+  Japanese sentence. Use `.note`.
+- Run `npm run sync:test` and `node scripts/sync-instagram.e2e.mjs` after
+  touching anything in `scripts/`.
