@@ -71,8 +71,10 @@
   background-color: var(--color-paper-dim);
 }
 
-/* Session intro: paper, the lockup, a short hold, then a quiet fade.
-   Visibility is gated by html[data-intro], set in <head> before first paint. */
+/* Session intro: optional landscape, paper, the lockup, a short hold,
+   then a quiet fade. Visibility is gated by html[data-intro], set in
+   <head> before first paint. The landscape file is a drop-in at
+   public/intro-landscape.mp4 — until it exists, the sequence is paper only. */
 .site-intro {
   display: none;
   position: fixed;
@@ -99,7 +101,34 @@ html[data-intro='pending'] .site-intro,
   pointer-events: none;
 }
 
+.site-intro__landscape {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background-color: var(--color-paper);
+  opacity: 1;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-intro__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background-color: var(--color-paper);
+}
+
+.site-intro.is-paper .site-intro__landscape,
+.site-intro.is-leaving .site-intro__landscape {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .site-intro__mark {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -118,16 +147,26 @@ html[data-intro='pending'] .site-intro,
   flex-shrink: 0;
   opacity: 0;
   transform: scale(0.98);
-  animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .site-intro__kl {
   height: 5.25rem;
-  animation-delay: 0.2s;
 }
 
 .site-intro__word {
   height: 2.5rem;
+}
+
+.site-intro.is-paper .site-intro__kl,
+.site-intro.is-paper .site-intro__word {
+  animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.site-intro.is-paper .site-intro__kl {
+  animation-delay: 0.2s;
+}
+
+.site-intro.is-paper .site-intro__word {
   animation-delay: 0.85s;
 }
 
@@ -154,6 +193,7 @@ html[data-intro='pending'] .site-intro,
 
 .site-intro__skip {
   position: absolute;
+  z-index: 2;
   right: 2rem;
   bottom: 1.75rem;
   font-family: var(--font-label);
@@ -161,9 +201,9 @@ html[data-intro='pending'] .site-intro,
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-ink-soft);
-  background: none;
+  background: color-mix(in srgb, var(--color-paper) 82%, transparent);
   border: 0;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.7rem;
   cursor: pointer;
 }
 
