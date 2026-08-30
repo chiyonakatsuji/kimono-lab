@@ -23,10 +23,12 @@
  *    consequence of syncing, not a bug.
  *  - If nothing is configured the script exits successfully without changes,
  *    so a deploy never fails just because the feed is unavailable.
+ *  - A feed that IS configured but errors exits 1, so running this by hand
+ *    tells you the token has expired. Set SYNC_ALLOW_FAILURE=1 (CI does) to
+ *    downgrade that to a warning and let the build publish what it already has.
  */
 
 import { mkdir, writeFile, readdir, unlink, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { parseCaption, looksLikeProduct } from './lib/caption.mjs';
 
@@ -290,8 +292,17 @@ async function main() {
   log('done.');
 }
 
+/** CI sets this; a hand-run sync stays strict so real errors are visible. */
+const ALLOW_FAILURE = /^(1|true|yes|on)$/i.test(process.env.SYNC_ALLOW_FAILURE ?? '');
+
 main().catch((err) => {
   console.error('[instagram] FAILED:', err.message);
-  // Deliberately non-fatal: a bad feed must not break a deploy.
-  process.exitCode = existsSync(CONTENT_DIR) ? 0 : 1;
+  if (!ALLOW_FAILURE) {
+    process.exitCode = 1;
+    return;
+  }
+  // A dead or expired feed must not take a published site down: leave whatever
+  // content is already on disk in place and let the build carry on.
+  console.error('[instagram] SYNC_ALLOW_FAILURE is set, so this is a warning, not an error.');
+  console.error('[instagram] building with the pieces already in src/content/pieces/.');
 });

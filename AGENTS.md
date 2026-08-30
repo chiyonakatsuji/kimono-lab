@@ -45,6 +45,35 @@ Astro emits.
 
 ---
 
+## Deployment
+
+Live at <https://chiyonakatsuji.github.io/kimono-lab/>, published by
+`.github/workflows/deploy.yml` on every push to `master`, on a daily
+`schedule:` at 21:40 UTC (06:40 JST) so new Instagram posts appear on their own,
+and on demand from the Actions tab.
+
+`astro.config.mjs` reads `SITE_URL` and `BASE_PATH`, defaulting to that project
+URL and the `/kimono-lab` base. The workflow leaves both unset on purpose. A
+custom domain only needs those two variables, not code changes.
+
+Instagram credentials reach the build as repository secrets — `BEHOLD_FEED_URL`,
+or `IG_USER_ID` + `IG_ACCESS_TOKEN` — with `IG_REQUIRED_TAG` and `IG_MAX_POSTS`
+as repository variables. Set them with `gh secret set NAME`, which reads the
+value without printing it. The workflow only ever tests them for emptiness.
+
+Three things keep a bad feed from taking the site down, and all three should
+survive future edits:
+
+1. no credentials → the sync step is skipped entirely;
+2. a failing feed → `SYNC_ALLOW_FAILURE=1` makes it a warning;
+3. synced content that will not build → the `ig-*.md` files are deleted and the
+   build is retried with the curated pieces alone.
+
+GitHub disables `schedule:` triggers after 60 days without repository activity.
+One "Run workflow" click brings them back.
+
+---
+
 ## Traps that have already caused bugs
 
 **Tailwind is v4.** Design tokens and custom utilities live in
@@ -115,6 +144,9 @@ not source.
   a backstop but it is only pattern matching.
 - With nothing configured the script exits 0 and changes nothing, so a deploy
   never fails because the feed is down. Keep that property.
+- A feed that **is** configured but errors exits 1, so a hand-run `npm run sync`
+  reports an expired token. `SYNC_ALLOW_FAILURE=1` downgrades that to a warning;
+  only CI sets it, so the site keeps publishing through a dead feed.
 - Caption parsing lives in `scripts/lib/caption.mjs`. The keyword tables for
   cloth and motif were written against invented captions and have **never been
   run against the atelier's real posts** — expect to tune them.
@@ -123,7 +155,11 @@ not source.
 
 ## Open work
 
-- [ ] `.env` is not set up yet. Instagram sync has never run for real.
+- [ ] `.env` is not set up yet, and no `BEHOLD_FEED_URL` secret is set on the
+      repo either. **Instagram sync has never run against a real feed.** Run
+      `npm run sync` locally with a real feed URL and read the generated
+      `ig-*.md` before letting CI publish them: the cloth and motif keyword
+      tables were written against invented captions.
 - [ ] Era and region for both pieces are `《要確認》`.
 - [ ] All About-page copy and both piece stories are placeholders.
 - [ ] `src/lib/site.ts` — `EMAIL` is `null`; hotel boutique names/floors unconfirmed.
@@ -133,8 +169,10 @@ not source.
       export) and is currently unused. Re-export from `KIMONO.LAB.kra`.
 - [ ] `src/pages/review.astro` is a development contact sheet — **delete before
       launch**.
-- [ ] Not deployed. Target is Cloudflare Pages, build command `npm run build:synced`,
-      plus a scheduled rebuild so new posts appear without a manual deploy.
+- [ ] A Behold free feed only returns the 6 most recent posts, so the synced
+      gallery cannot grow past six. To keep a piece permanently, rename its
+      `ig-*.md` to a real slug and commit it — the gitignore only covers `ig-*`,
+      and its images have to move out of `src/assets/instagram/` too.
 - [ ] Two unused videos in `public/video/` — nobody has confirmed what they show.
 
 ---

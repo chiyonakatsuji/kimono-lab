@@ -3,7 +3,14 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [master]
+  # Re-sync and republish on demand, from the Actions tab.
   workflow_dispatch:
+  # Pick up new Instagram posts without anyone pushing. 21:40 UTC is 06:40 JST,
+  # so a garment posted during the day in Japan is live the next morning.
+  # GitHub disables scheduled workflows after 60 days with no repository
+  # activity; one "Run workflow" click re-enables them.
+  schedule:
+    - cron: '40 21 * * *'
 
 permissions:
   contents: read
@@ -20,9 +27,82 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: withastro/action@v6
+
+      # The sync runs before dependencies are installed, because it uses only
+      # Node built-ins. Pinning the version keeps CI and local behaviour equal.
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+
+      # Emptiness is all we test; no secret is ever printed. Without
+      # credentials the site still publishes the hand-authored pieces.
+      - name: Look for Instagram credentials
+        id: creds
+        env:
+          BEHOLD_FEED_URL: ${{ secrets.BEHOLD_FEED_URL }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          if [ -n "$BEHOLD_FEED_URL" ] || { [ -n "$IG_USER_ID" ] && [ -n "$IG_ACCESS_TOKEN" ]; }; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'configured=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::No Instagram credentials configured — publishing the hand-authored pieces only.'
+          fi
+
+      # SYNC_ALLOW_FAILURE turns a dead feed or an expired token into a
+      # warning, so the published site survives it. `npm run sync` locally
+      # keeps the strict exit code.
+      - name: Sync pieces from Instagram
+        id: sync
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          BEHOLD_FEED_URL: ${{ secrets.BEHOLD_FEED_URL }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_REQUIRED_TAG: ${{ vars.IG_REQUIRED_TAG || secrets.IG_REQUIRED_TAG }}
+          IG_MAX_POSTS: ${{ vars.IG_MAX_POSTS }}
+          SYNC_ALLOW_FAILURE: '1'
+        run: |
+          node scripts/sync-instagram.mjs
+          if ls src/content/pieces/ig-*.md >/dev/null 2>&1; then
+            echo 'wrote=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'wrote=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      # SITE_URL and BASE_PATH are deliberately unset: astro.config.mjs already
+      # defaults to this project site's URL and /kimono-lab/ base.
+      - name: Build
+        id: build
+        continue-on-error: true
+        uses: withastro/action@v6
+        with:
+          node-version: 22
+
+      # No real caption has ever been through the parser, and a synced photo
+      # can be a format the image pipeline refuses. Losing new posts beats
+      # losing the site, so drop them and build the curated content alone.
+      - name: Discard synced pieces after a failed build
+        id: discard
+        if: steps.build.outcome == 'failure' && steps.sync.outputs.wrote == 'true'
+        run: |
+          echo '::warning::Build failed with Instagram-synced pieces; rebuilding without them.'
+          rm -f src/content/pieces/ig-*.md
+          rm -rf src/assets/instagram
+
+      - name: Rebuild without synced pieces
+        if: steps.discard.outcome == 'success'
+        uses: withastro/action@v6
+        with:
+          node-version: 22
+
+      # `continue-on-error` above hides a genuine failure, so re-raise it.
+      - name: Report an unrecoverable build failure
+        if: steps.build.outcome == 'failure' && steps.discard.outcome != 'success'
+        run: |
+          echo '::error::Astro build failed with no Instagram-synced pieces to blame.'
+          exit 1
 
   deploy:
     needs: build
