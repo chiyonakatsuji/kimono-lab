@@ -71,7 +71,7 @@
   background-color: var(--color-paper-dim);
 }
 
-/* Session intro: paper overlay, figure contained, then a quiet fade to the page.
+/* Session intro: paper, the lockup, a short hold, then a quiet fade.
    Visibility is gated by html[data-intro], set in <head> before first paint. */
 .site-intro {
   display: none;
@@ -82,14 +82,15 @@
   justify-content: center;
   background-color: var(--color-paper);
   opacity: 1;
-  transition: opacity 0.75s ease;
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html[data-intro='pending'] {
   overflow: hidden;
 }
 
-html[data-intro='pending'] .site-intro {
+html[data-intro='pending'] .site-intro,
+.site-intro.is-leaving {
   display: flex;
 }
 
@@ -98,11 +99,52 @@ html[data-intro='pending'] .site-intro {
   pointer-events: none;
 }
 
-.site-intro video {
+.site-intro__mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 0 2rem;
+}
+
+.site-intro__kl,
+.site-intro__word {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: auto;
+  opacity: 0;
+  transform: scale(0.98);
+  animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.site-intro__kl {
+  height: 5.25rem;
+  animation-delay: 0.2s;
+}
+
+.site-intro__word {
+  height: 2.5rem;
+  animation-delay: 0.85s;
+}
+
+@media (min-width: 640px) {
+  .site-intro__mark {
+    gap: 2.35rem;
+  }
+
+  .site-intro__kl {
+    height: 6.25rem;
+  }
+
+  .site-intro__word {
+    height: 2.85rem;
+  }
+}
+
+@keyframes site-intro-mark {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .site-intro__skip {

@@ -1,7 +1,10 @@
 ---
 import '../styles/global.css';
+import { Image } from 'astro:assets';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import monogram from '../assets/logo-monogram.png';
+import wordmark from '../assets/logo-wordmark.png';
 import { useTranslations, withBase, stripBase, type Lang } from '../i18n/ui';
 
 interface Props {
@@ -15,8 +18,6 @@ const t = useTranslations(lang);
 
 const fullTitle = title ? `${title}｜KIMONO.LAB` : `KIMONO.LAB — ${t('site.tagline')}`;
 const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
-const introMp4 = withBase('/intro.mp4');
-const introWebm = withBase('/intro.webm');
 ---
 
 <!doctype html>
@@ -67,17 +68,48 @@ const introWebm = withBase('/intro.webm');
         }
       })();
     </script>
+    <style is:inline>
+      html[data-intro='pending'] {
+        overflow: hidden;
+      }
+      html[data-intro='pending'] .site-intro {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        background-color: #fbfaf8;
+      }
+      html[data-intro='pending'] .site-intro__kl,
+      html[data-intro='pending'] .site-intro__word {
+        opacity: 0;
+      }
+    </style>
   </head>
 
   <body class="min-h-screen flex flex-col">
-    <div
-      id="site-intro"
-      class="site-intro"
-      data-mp4={introMp4}
-      data-webm={introWebm}
-      aria-hidden="true"
-    >
-      <video muted playsinline disablepictureinpicture disableremoteplayback></video>
+    <div id="site-intro" class="site-intro">
+      <div class="site-intro__mark" aria-hidden="true">
+        <Image
+          src={monogram}
+          alt=""
+          widths={[168, 336]}
+          sizes="168px"
+          class="site-intro__kl"
+          loading="eager"
+          decoding="sync"
+        />
+        <Image
+          src={wordmark}
+          alt=""
+          widths={[480, 960]}
+          sizes="(min-width: 640px) 22rem, 16rem"
+          class="site-intro__word"
+          loading="eager"
+          decoding="sync"
+        />
+      </div>
       <button type="button" class="site-intro__skip">{t('intro.skip')}</button>
     </div>
 
@@ -99,6 +131,9 @@ const introWebm = withBase('/intro.webm');
     <script is:inline>
       (function () {
         var KEY = 'kimono-lab.intro';
+        var HOLD_MS = 3400;
+        var FADE_MS = 700;
+        var SAFETY_MS = 7000;
 
         function shouldSkip() {
           try {
@@ -125,16 +160,8 @@ const introWebm = withBase('/intro.webm');
           overlay.setAttribute('data-bound', '1');
           document.documentElement.dataset.intro = 'pending';
 
-          var video = overlay.querySelector('video');
-          if (!video) {
-            overlay.remove();
-            return;
-          }
-
           var settled = false;
-          var started = false;
-          var fadeMs = 900;
-          var startGuard;
+          var holdTimer;
           var safetyTimer;
 
           function markDone() {
@@ -144,12 +171,6 @@ const introWebm = withBase('/intro.webm');
             document.documentElement.dataset.intro = 'done';
           }
 
-          function cleanupVideo() {
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
-          }
-
           function onKey(e) {
             if (e.key === 'Escape') dismiss();
           }
@@ -157,20 +178,19 @@ const introWebm = withBase('/intro.webm');
           function dismiss() {
             if (settled) return;
             settled = true;
+            overlay.classList.add('is-leaving');
             markDone();
-            clearTimeout(startGuard);
+            clearTimeout(holdTimer);
             clearTimeout(safetyTimer);
             document.removeEventListener('keydown', onKey);
-            overlay.classList.add('is-leaving');
             var finished = false;
             function done() {
               if (finished) return;
               finished = true;
-              cleanupVideo();
               overlay.remove();
             }
             overlay.addEventListener('transitionend', done);
-            setTimeout(done, fadeMs);
+            setTimeout(done, FADE_MS);
           }
 
           var skip = overlay.querySelector('.site-intro__skip');
@@ -181,42 +201,16 @@ const introWebm = withBase('/intro.webm');
               dismiss();
             });
           }
+          overlay.addEventListener('click', dismiss);
           document.addEventListener('keydown', onKey);
-          video.addEventListener('ended', dismiss);
-          video.addEventListener('error', dismiss);
-          video.addEventListener('playing', function () {
-            started = true;
-          });
-          video.addEventListener('loadedmetadata', function () {
-            var ms = Math.ceil((video.duration || 12) * 1000) + 2500;
-            safetyTimer = setTimeout(function () {
-              if (!settled) dismiss();
-            }, ms);
-          });
 
-          startGuard = setTimeout(function () {
-            if (!started) dismiss();
-          }, 1800);
-
-          var webm = overlay.getAttribute('data-webm');
-          var mp4 = overlay.getAttribute('data-mp4');
-          if (webm && video.canPlayType('video/webm; codecs="vp9"')) {
-            video.src = webm;
-          } else if (mp4) {
-            video.src = mp4;
-          } else {
-            dismiss();
-            return;
+          var images = overlay.querySelectorAll('img');
+          for (var i = 0; i < images.length; i++) {
+            images[i].addEventListener('error', dismiss);
           }
 
-          video.muted = true;
-          video.playsInline = true;
-          var playAttempt = video.play();
-          if (playAttempt && playAttempt.catch) {
-            playAttempt.catch(function () {
-              dismiss();
-            });
-          }
+          holdTimer = setTimeout(dismiss, HOLD_MS);
+          safetyTimer = setTimeout(dismiss, SAFETY_MS);
         }
 
         bootIntro();
