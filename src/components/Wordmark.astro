@@ -1,0 +1,19 @@
+---
+import wordmark from '../assets/logo-wordmark.png';
+
+interface Props {
+  alt?: string;
+  class?: string;
+}
+
+const { alt = 'KIMONO.LAB JAPAN' } = Astro.props;
+---
+
+<img
+  src={wordmark.src}
+  alt={alt}
+  width={wordmark.width}
+  height={wordmark.height}
+  class:list={['logo-wordmark', Astro.props.class]}
+  decoding="async"
+/>

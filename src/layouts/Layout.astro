@@ -1,10 +1,10 @@
 ---
 import '../styles/global.css';
-import { Image } from 'astro:assets';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Wordmark from '../components/Wordmark.astro';
+import { Image } from 'astro:assets';
 import monogram from '../assets/logo-monogram.png';
-import wordmark from '../assets/logo-wordmark.png';
 import { useTranslations, withBase, stripBase, type Lang } from '../i18n/ui';
 
 interface Props {
@@ -90,9 +90,8 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
   </head>
 
   <body class:list={['min-h-screen flex flex-col', home && 'is-home']}>
-    <!-- Paper lockup only: KL → wordmark → fade into the page already
-         underneath. Landscape lives on the homepage hero, not here. -->
-    <div id="site-intro" class="site-intro">
+    <!-- Paper lockup only: KL → wordmark → fade onto the white landing. -->
+    <div id="site-intro" class="site-intro" data-home={home ? '1' : undefined}>
       <div class="site-intro__mark" aria-hidden="true">
         <Image
           src={monogram}
@@ -103,17 +102,13 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
           loading="eager"
           decoding="sync"
         />
-        <Image
-          src={wordmark}
-          alt=""
-          widths={[480, 960]}
-          sizes="(min-width: 640px) 22rem, 16rem"
-          class="site-intro__word"
-          loading="eager"
-          decoding="sync"
-        />
+        <Wordmark alt="" class="site-intro__word" />
       </div>
-      <button type="button" class="site-intro__skip">{t('intro.skip')}</button>
+      {
+        !home && (
+          <button type="button" class="site-intro__skip">{t('intro.skip')}</button>
+        )
+      }
     </div>
 
     <a
@@ -125,7 +120,7 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
 
     <Header lang={lang} />
 
-    <main id="main" class="flex-1">
+    <main id="main" class:list={['flex-1', home && 'home-main']}>
       <slot />
     </main>
 
@@ -135,7 +130,6 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
       (function () {
         var KEY = 'kimono-lab.intro';
         var HOLD_MS = 3400;
-        var FADE_MS = 700;
         var SAFETY_MS = 7000;
 
         function shouldSkip() {
@@ -156,6 +150,7 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
           if (shouldSkip()) {
             document.documentElement.dataset.intro = 'done';
             overlay.remove();
+            document.dispatchEvent(new Event('kimono-lab:intro-gone'));
             return;
           }
 
@@ -181,19 +176,12 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
           function dismiss() {
             if (settled) return;
             settled = true;
-            overlay.classList.add('is-leaving');
             markDone();
             clearTimeout(holdTimer);
             clearTimeout(safetyTimer);
             document.removeEventListener('keydown', onKey);
-            var finished = false;
-            function done() {
-              if (finished) return;
-              finished = true;
-              overlay.remove();
-            }
-            overlay.addEventListener('transitionend', done);
-            setTimeout(done, FADE_MS);
+            overlay.remove();
+            document.dispatchEvent(new Event('kimono-lab:intro-gone'));
           }
 
           var skip = overlay.querySelector('.site-intro__skip');
@@ -204,7 +192,9 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
               dismiss();
             });
           }
-          overlay.addEventListener('click', dismiss);
+          if (overlay.getAttribute('data-home') !== '1') {
+            overlay.addEventListener('click', dismiss);
+          }
           document.addEventListener('keydown', onKey);
 
           var images = overlay.querySelectorAll('img');

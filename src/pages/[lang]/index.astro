@@ -7,7 +7,6 @@ import Layout from '../../layouts/Layout.astro';
 import PieceCard from '../../components/PieceCard.astro';
 import { useTranslations, path, languages, withBase, type Lang } from '../../i18n/ui';
 import { STOCKISTS } from '../../lib/site';
-import wordmark from '../../assets/logo-wordmark.png';
 
 export function getStaticPaths() {
   return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
@@ -33,44 +32,48 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
 ---
 
 <Layout lang={lang} description={t('home.hero.lead')} home>
-  {/* Full-viewport scenery after the paper intro — looping ambient hero,
-      not a preloader. Piece pages stay gallery-first. */}
-  <section class="home-hero">
-    <div class="home-hero__media" aria-hidden="true">
-      {
-        heroPosterExists && (
-          <img class="home-hero__poster" src={heroPosterSrc} alt="" />
-        )
-      }
-      {
-        hasHeroVideo && (
-          <video
-            class="home-hero__video"
-            muted
-            playsinline
-            loop
-            autoplay
-            preload="auto"
-            disablepictureinpicture
-            poster={heroPosterExists ? heroPosterSrc : undefined}
-          >
-            {heroWebmExists && <source src={heroWebmSrc} type="video/webm" />}
-            {heroMp4Exists && <source src={heroMp4Src} type="video/mp4" />}
-          </video>
-        )
-      }
-    </div>
-    <div class="home-hero__overlay">
-      <Image
-        src={wordmark}
-        alt=""
-        widths={[320, 640]}
-        sizes="(min-width: 640px) 12rem, 10rem"
-        class="home-hero__wordmark"
-        loading="eager"
-        aria-hidden="true"
-      />
-      <h1 class="home-hero__lead">{t('home.hero.lead')}</h1>
+  {/* White first screen after the lockup. Landscape is under the paper
+      and only shows through as the visitor scrolls. */}
+  <section class="home-gate" aria-label={t('home.scroll')}>
+    <div class="home-gate__track">
+      <div class="home-gate__sticky">
+        <div class="home-gate__media" aria-hidden="true">
+          {
+            heroPosterExists && (
+              <img class="home-gate__poster" src={heroPosterSrc} alt="" />
+            )
+          }
+          {
+            hasHeroVideo && (
+              <video
+                class="home-gate__video"
+                muted
+                playsinline
+                loop
+                preload="auto"
+                disablepictureinpicture
+                poster={heroPosterExists ? heroPosterSrc : undefined}
+              >
+                {heroWebmExists && <source src={heroWebmSrc} type="video/webm" />}
+                {heroMp4Exists && <source src={heroMp4Src} type="video/mp4" />}
+              </video>
+            )
+          }
+        </div>
+        <div class="home-gate__paper"></div>
+        <button type="button" class="home-gate__arrow" aria-label={t('home.scroll')}>
+          <svg viewBox="0 0 24 12" aria-hidden="true">
+            <path
+              d="M2 2 L12 10 L22 2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.25"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -80,29 +83,110 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
       try {
         reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       } catch (e) {}
-      if (!reduce) return;
-      var video = document.querySelector('.home-hero__video');
-      if (!video) return;
-      try {
-        video.pause();
-      } catch (e) {}
-      video.removeAttribute('autoplay');
-      if (document.querySelector('.home-hero__poster')) {
-        try {
-          video.removeAttribute('src');
-          var sources = video.querySelectorAll('source');
-          for (var i = 0; i < sources.length; i++) sources[i].remove();
-          video.load();
-        } catch (e) {}
-        video.remove();
+
+      var track = document.querySelector('.home-gate__track');
+      var paper = document.querySelector('.home-gate__paper');
+      var media = document.querySelector('.home-gate__media');
+      var arrow = document.querySelector('.home-gate__arrow');
+      var video = document.querySelector('.home-gate__video');
+      if (!track) return;
+
+      if (reduce) {
+        if (video) {
+          try {
+            video.pause();
+          } catch (e) {}
+          video.remove();
+        }
+        return;
+      }
+
+      var arrowOn = false;
+      var playing = false;
+      var armed = false;
+      var site = false;
+
+      function progress() {
+        var span = track.offsetHeight - window.innerHeight;
+        if (span <= 0) return 0;
+        var y = window.scrollY || window.pageYOffset || 0;
+        return Math.min(1, Math.max(0, y / span));
+      }
+
+      function tick() {
+        var p = armed ? progress() : 0;
+        if (paper) paper.style.opacity = String(1 - p);
+        if (media) media.style.opacity = String(p);
+
+        if (video) {
+          if (p > 0.04 && !playing) {
+            playing = true;
+            var play = video.play();
+            if (play && play.catch) play.catch(function () {});
+          } else if (p <= 0.04 && playing) {
+            playing = false;
+            try {
+              video.pause();
+            } catch (e) {}
+          }
+        }
+
+        var showSite = p > 0.92;
+        if (showSite !== site) {
+          site = showSite;
+          document.body.classList.toggle('is-site', site);
+        }
+
+        if (arrow && arrowOn) {
+          var visible = p < 0.1;
+          arrow.style.opacity = visible ? '1' : '0';
+          arrow.style.pointerEvents = visible ? 'auto' : 'none';
+        }
+      }
+
+      function showArrow() {
+        if (arrowOn || !arrow) return;
+        arrowOn = true;
+        arrow.classList.add('is-ready');
+        tick();
+      }
+
+      function arm() {
+        if (armed) return;
+        armed = true;
+        window.scrollTo(0, 0);
+        tick();
+        window.setTimeout(showArrow, 200);
+      }
+
+      function revealLandscape() {
+        var y = Math.max(0, track.offsetHeight - window.innerHeight);
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+
+      if (arrow) {
+        arrow.addEventListener('click', function (e) {
+          e.preventDefault();
+          revealLandscape();
+        });
+      }
+
+      window.addEventListener('scroll', tick, { passive: true });
+      window.addEventListener('resize', tick);
+
+      document.addEventListener('kimono-lab:intro-gone', arm);
+      if (!document.getElementById('site-intro')) {
+        arm();
       }
     })();
   </script>
 
-  {/* ---------- The photograph, given room ---------- */}
+  <div id="home-site" class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-24 sm:pt-32 pb-8">
+    <h1 class="home-site__lead">{t('home.hero.lead')}</h1>
+  </div>
   {
     featured && (
-      <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-24 sm:pt-32">
+      <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-16 sm:pt-24">
         <a href={path(lang, 'pieces', featured.id)} class="group block">
           <Image
             src={featured.data.photo}

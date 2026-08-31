@@ -15,6 +15,11 @@
 
   --font-mincho: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif;
   --font-label: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+
+  /* Intrinsic pixel ratios of the lockup PNGs. Always size logos from
+     one axis + this ratio — never height-only against the HTML width. */
+  --logo-wordmark-ratio: 947 / 193;
+  --logo-monogram-ratio: 453 / 353;
 }
 
 @layer base {
@@ -113,23 +118,25 @@ html[data-intro='pending'] .site-intro,
 .site-intro__kl,
 .site-intro__word {
   display: block;
-  width: auto;
-  max-width: none;
   overflow: visible;
   object-fit: contain;
+  object-position: center;
   flex-shrink: 0;
+  align-self: center;
+  max-width: none;
   opacity: 0;
   transform: scale(0.98);
   animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .site-intro__kl {
-  height: 5.25rem;
+  height: 7rem !important;
+  width: calc(7rem * 453 / 353) !important;
   animation-delay: 0.2s;
 }
 
 .site-intro__word {
-  height: 2.5rem;
+  --logo-h: 3.5rem;
   animation-delay: 0.85s;
 }
 
@@ -139,11 +146,12 @@ html[data-intro='pending'] .site-intro,
   }
 
   .site-intro__kl {
-    height: 6.25rem;
+    height: 8.25rem !important;
+    width: calc(8.25rem * 453 / 353) !important;
   }
 
   .site-intro__word {
-    height: 2.85rem;
+    --logo-h: 4rem;
   }
 }
 
@@ -175,48 +183,60 @@ html[data-intro='pending'] .site-intro,
   color: var(--color-sumi);
 }
 
-/* Homepage: the landscape is the first screen of the site, after the
-   paper lockup dismisses. Header sits on the video; piece pages stay
-   gallery-first and do not use this. */
+/* Homepage: after the paper lockup, stay on white. The landscape sits
+   under the veil and only shows through as the visitor scrolls. */
 body.is-home > header {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10;
-  padding-bottom: 2rem;
-  background: linear-gradient(
-    to bottom,
-    rgb(251 250 248 / 0.78) 0%,
-    rgb(251 250 248 / 0.32) 62%,
-    rgb(251 250 248 / 0) 100%
-  );
+  z-index: 20;
+  background-color: var(--color-paper);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
-body.is-home > header .label {
-  color: var(--color-ink);
+body.is-home.is-site > header {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
 }
 
-body.is-home > header .label:hover,
-body.is-home > header .label:focus-visible {
-  color: var(--color-sumi);
+.home-main {
+  display: block;
+  flex: none;
+  width: 100%;
 }
 
-.home-hero {
-  position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
+.home-gate {
+  display: block;
+  flex-shrink: 0;
+}
+
+.home-gate__track {
+  height: 200vh;
+  height: 200dvh;
+}
+
+.home-gate__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
-  background-color: var(--color-sumi);
+  background-color: var(--color-paper);
 }
 
-.home-hero__media {
+.home-gate__media {
   position: absolute;
   inset: 0;
+  z-index: 0;
+  opacity: 0;
 }
 
-.home-hero__video,
-.home-hero__poster {
+.home-gate__video,
+.home-gate__poster {
   position: absolute;
   inset: 0;
   display: block;
@@ -226,55 +246,84 @@ body.is-home > header .label:focus-visible {
   object-position: center;
 }
 
-.home-hero__overlay {
-  position: relative;
+.home-gate__paper {
+  position: absolute;
+  inset: 0;
   z-index: 1;
+  background-color: #fbfaf8;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.home-gate__arrow {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 1.75rem;
   display: flex;
-  min-height: 100vh;
-  min-height: 100dvh;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 5rem 2rem 3.25rem;
-  background: linear-gradient(
-    to top,
-    rgb(26 23 20 / 0.48) 0%,
-    rgb(26 23 20 / 0.08) 42%,
-    transparent 68%
-  );
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-soft);
+  transform: translateX(-50%);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (min-width: 640px) {
-  .home-hero__overlay {
-    padding: 5rem 3.5rem 4rem;
-  }
+html[data-intro='done'] .home-gate__arrow.is-ready {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.home-hero__wordmark {
+.home-gate__arrow svg {
   display: block;
-  height: 2.15rem;
-  width: auto;
-  margin-bottom: 1.25rem;
-  filter: brightness(0) invert(1);
+  width: 1.35rem;
+  height: 0.75rem;
 }
 
-@media (min-width: 640px) {
-  .home-hero__wordmark {
-    height: 2.55rem;
-    margin-bottom: 1.5rem;
-  }
+.home-gate__arrow:hover,
+.home-gate__arrow:focus-visible {
+  color: var(--color-sumi);
 }
 
-.home-hero__lead {
+.home-site__lead {
   max-width: 22rem;
-  color: var(--color-paper);
+  color: var(--color-sumi);
   font-size: 1.5rem;
   line-height: 1.7;
 }
 
 @media (min-width: 640px) {
-  .home-hero__lead {
+  .home-site__lead {
     max-width: 28rem;
     font-size: 1.875rem;
+  }
+}
+
+/* Height is the source of truth; width is height × 947/193.
+   !important beats Tailwind img { height: auto } and the HTML width attr. */
+.logo-wordmark {
+  display: block;
+  height: var(--logo-h, 3.25rem) !important;
+  width: calc(var(--logo-h, 3.25rem) * 947 / 193) !important;
+  max-width: none !important;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+header .logo-wordmark {
+  --logo-h: 3.25rem;
+}
+
+@media (min-width: 640px) {
+  header .logo-wordmark {
+    --logo-h: 3.75rem;
   }
 }
 
@@ -289,11 +338,22 @@ body.is-home > header .label:focus-visible {
     transition-duration: 0.01ms !important;
   }
 
-  .home-hero__video {
+  .home-gate__track {
+    height: auto;
+  }
+
+  .home-gate__sticky {
+    position: relative;
+    height: auto;
+    min-height: 0;
+  }
+
+  .home-gate__media,
+  .home-gate__paper {
     display: none;
   }
 
-  .home-hero__poster {
-    display: block;
+  .home-gate__arrow {
+    display: none;
   }
 }

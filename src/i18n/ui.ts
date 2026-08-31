@@ -67,6 +67,7 @@ export const ui = {
     'footer.rights': 'All rights reserved.',
     skip: '本文へ移動',
     'intro.skip': 'スキップ',
+    'home.scroll': '風景を見る',
   },
   en: {
     'site.tagline': 'Your Beauty, Your Story',
@@ -117,6 +118,7 @@ export const ui = {
     'footer.rights': 'All rights reserved.',
     skip: 'Skip to content',
     'intro.skip': 'Skip',
+    'home.scroll': 'See the landscape',
   },
 } as const satisfies Record<Lang, Record<string, string>>;
 
