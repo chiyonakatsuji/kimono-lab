@@ -31,3 +31,7 @@ src/content/pieces/ig-*.md
 .env*
 !.env.example
 
+# bulky raw stock dumps (intro is derived as intro-landscape.mp4 / .webm)
+public/*_medium.mp4
+.tmp-intro-frames/
+
