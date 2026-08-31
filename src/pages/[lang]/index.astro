@@ -1,10 +1,13 @@
 ---
+import fs from 'node:fs';
+import nodePath from 'node:path';
 import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import PieceCard from '../../components/PieceCard.astro';
-import { useTranslations, path, languages, type Lang } from '../../i18n/ui';
+import { useTranslations, path, languages, withBase, type Lang } from '../../i18n/ui';
 import { STOCKISTS } from '../../lib/site';
+import wordmark from '../../assets/logo-wordmark.png';
 
 export function getStaticPaths() {
   return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
@@ -18,17 +21,83 @@ const pieces = (await getCollection('pieces', ({ data }) => !data.draft)).sort(
 );
 
 const [featured, ...rest] = pieces;
+
+const publicDir = nodePath.join(process.cwd(), 'public');
+const heroMp4Exists = fs.existsSync(nodePath.join(publicDir, 'hero-landscape.mp4'));
+const heroWebmExists = fs.existsSync(nodePath.join(publicDir, 'hero-landscape.webm'));
+const heroPosterExists = fs.existsSync(nodePath.join(publicDir, 'hero-landscape.jpg'));
+const hasHeroVideo = heroMp4Exists || heroWebmExists;
+const heroMp4Src = withBase('/hero-landscape.mp4');
+const heroWebmSrc = withBase('/hero-landscape.webm');
+const heroPosterSrc = withBase('/hero-landscape.jpg');
 ---
 
-<Layout lang={lang} description={t('home.hero.lead')}>
-  {/* ---------- Opening line ---------- */}
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
-    <p class="label">{t('site.tagline')}</p>
-    <h1 class="mt-8 max-w-2xl text-2xl sm:text-3xl leading-[1.7] text-sumi">
-      {t('home.hero.lead')}
-    </h1>
-    <p class="label mt-8">{t('site.oneOfAKind')}</p>
+<Layout lang={lang} description={t('home.hero.lead')} home>
+  {/* Full-viewport scenery after the paper intro — looping ambient hero,
+      not a preloader. Piece pages stay gallery-first. */}
+  <section class="home-hero">
+    <div class="home-hero__media" aria-hidden="true">
+      {
+        heroPosterExists && (
+          <img class="home-hero__poster" src={heroPosterSrc} alt="" />
+        )
+      }
+      {
+        hasHeroVideo && (
+          <video
+            class="home-hero__video"
+            muted
+            playsinline
+            loop
+            autoplay
+            preload="auto"
+            disablepictureinpicture
+            poster={heroPosterExists ? heroPosterSrc : undefined}
+          >
+            {heroWebmExists && <source src={heroWebmSrc} type="video/webm" />}
+            {heroMp4Exists && <source src={heroMp4Src} type="video/mp4" />}
+          </video>
+        )
+      }
+    </div>
+    <div class="home-hero__overlay">
+      <Image
+        src={wordmark}
+        alt=""
+        widths={[320, 640]}
+        sizes="(min-width: 640px) 12rem, 10rem"
+        class="home-hero__wordmark"
+        loading="eager"
+        aria-hidden="true"
+      />
+      <h1 class="home-hero__lead">{t('home.hero.lead')}</h1>
+    </div>
   </section>
+
+  <script is:inline>
+    (function () {
+      var reduce = false;
+      try {
+        reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      } catch (e) {}
+      if (!reduce) return;
+      var video = document.querySelector('.home-hero__video');
+      if (!video) return;
+      try {
+        video.pause();
+      } catch (e) {}
+      video.removeAttribute('autoplay');
+      if (document.querySelector('.home-hero__poster')) {
+        try {
+          video.removeAttribute('src');
+          var sources = video.querySelectorAll('source');
+          for (var i = 0; i < sources.length; i++) sources[i].remove();
+          video.load();
+        } catch (e) {}
+        video.remove();
+      }
+    })();
+  </script>
 
   {/* ---------- The photograph, given room ---------- */}
   {
@@ -41,7 +110,6 @@ const [featured, ...rest] = pieces;
             widths={[720, 1100, 1600]}
             sizes="(min-width: 1024px) 62vw, 100vw"
             class="w-full max-w-3xl h-auto bg-paper-dim"
-            loading="eager"
           />
           <div class="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-2">
             <h2 class="text-base text-sumi group-hover:text-ai transition-colors">

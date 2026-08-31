@@ -1,6 +1,4 @@
 ---
-import fs from 'node:fs';
-import path from 'node:path';
 import '../styles/global.css';
 import { Image } from 'astro:assets';
 import Header from '../components/Header.astro';
@@ -13,19 +11,11 @@ interface Props {
   lang: Lang;
   title?: string;
   description?: string;
+  home?: boolean;
 }
 
-const { lang, title, description } = Astro.props;
+const { lang, title, description, home = false } = Astro.props;
 const t = useTranslations(lang);
-
-// Landscape slot: drop a muted clip at public/intro-landscape.mp4 (optional .webm).
-// Until that file exists the intro is paper + lockup only — no stock Kyoto.
-const introPublicDir = path.join(process.cwd(), 'public');
-const introMp4Exists = fs.existsSync(path.join(introPublicDir, 'intro-landscape.mp4'));
-const introWebmExists = fs.existsSync(path.join(introPublicDir, 'intro-landscape.webm'));
-const hasIntroLandscape = introMp4Exists || introWebmExists;
-const introMp4Src = withBase('/intro-landscape.mp4');
-const introWebmSrc = withBase('/intro-landscape.webm');
 
 const fullTitle = title ? `${title}｜KIMONO.LAB` : `KIMONO.LAB — ${t('site.tagline')}`;
 const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
@@ -92,16 +82,6 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
         justify-content: center;
         background-color: #fbfaf8;
       }
-      html[data-intro='pending'] .site-intro__landscape {
-        position: absolute;
-        inset: 0;
-      }
-      html[data-intro='pending'] .site-intro__video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-      }
       html[data-intro='pending'] .site-intro__kl,
       html[data-intro='pending'] .site-intro__word {
         opacity: 0;
@@ -109,35 +89,10 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
     </style>
   </head>
 
-  <body class="min-h-screen flex flex-col">
-    <!-- Intro sequence (Toraya-like, owned footage only):
-         1) 2–4s muted landscape, object-fit cover, full viewport
-         2) crossfade to paper #fbfaf8
-         3) existing KL → wordmark, hold, overlay fade
-         Drop-in: public/intro-landscape.mp4 (and optional .webm).
-         Clip: 3–6s usable, landscape 16:9 or wider, 720p/1080p H.264 +faststart,
-         muted, quiet Japanese garden / architecture / season — not 9:16, not
-         a travel vlog, not clothes_animation2 / KIMONO.LAB.mp4. -->
-    <div
-      id="site-intro"
-      class:list={['site-intro', hasIntroLandscape ? 'is-landscape' : 'is-paper']}
-    >
-      {
-        hasIntroLandscape && (
-          <div class="site-intro__landscape" aria-hidden="true">
-            <video
-              class="site-intro__video"
-              muted
-              playsinline
-              preload="auto"
-              disablepictureinpicture
-            >
-              {introWebmExists && <source src={introWebmSrc} type="video/webm" />}
-              {introMp4Exists && <source src={introMp4Src} type="video/mp4" />}
-            </video>
-          </div>
-        )
-      }
+  <body class:list={['min-h-screen flex flex-col', home && 'is-home']}>
+    <!-- Paper lockup only: KL → wordmark → fade into the page already
+         underneath. Landscape lives on the homepage hero, not here. -->
+    <div id="site-intro" class="site-intro">
       <div class="site-intro__mark" aria-hidden="true">
         <Image
           src={monogram}
@@ -181,11 +136,7 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
         var KEY = 'kimono-lab.intro';
         var HOLD_MS = 3400;
         var FADE_MS = 700;
-        var PAPER_FADE_MS = 900;
-        var LANDSCAPE_MAX_MS = 4000;
-        var LANDSCAPE_DEFAULT_MS = 3200;
-        var VIDEO_FAIL_MS = 1800;
-        var SAFETY_MS = 11000;
+        var SAFETY_MS = 7000;
 
         function shouldSkip() {
           try {
@@ -213,34 +164,14 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
           document.documentElement.dataset.intro = 'pending';
 
           var settled = false;
-          var paperStarted = false;
-          var landscapePlayed = false;
           var holdTimer;
           var safetyTimer;
-          var landscapeTimer;
-          var failTimer;
-          var video = overlay.querySelector('.site-intro__video');
 
           function markDone() {
             try {
               sessionStorage.setItem(KEY, '1');
             } catch (e) {}
             document.documentElement.dataset.intro = 'done';
-          }
-
-          function stopVideo() {
-            if (!video) return;
-            try {
-              video.pause();
-            } catch (e) {}
-            try {
-              video.removeAttribute('src');
-              var sources = video.querySelectorAll('source');
-              for (var i = 0; i < sources.length; i++) sources[i].remove();
-              video.load();
-            } catch (e) {}
-            if (video.parentNode) video.parentNode.remove();
-            video = null;
           }
 
           function onKey(e) {
@@ -254,10 +185,7 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
             markDone();
             clearTimeout(holdTimer);
             clearTimeout(safetyTimer);
-            clearTimeout(landscapeTimer);
-            clearTimeout(failTimer);
             document.removeEventListener('keydown', onKey);
-            stopVideo();
             var finished = false;
             function done() {
               if (finished) return;
@@ -266,27 +194,6 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
             }
             overlay.addEventListener('transitionend', done);
             setTimeout(done, FADE_MS);
-          }
-
-          function startPaper() {
-            if (paperStarted || settled) return;
-            paperStarted = true;
-            clearTimeout(landscapeTimer);
-            clearTimeout(failTimer);
-            overlay.classList.remove('is-landscape');
-            overlay.classList.add('is-paper');
-            var fade = landscapePlayed ? PAPER_FADE_MS : 0;
-            if (video) {
-              try {
-                video.pause();
-              } catch (e) {}
-              if (fade) {
-                setTimeout(stopVideo, fade);
-              } else {
-                stopVideo();
-              }
-            }
-            holdTimer = setTimeout(dismiss, fade + HOLD_MS);
           }
 
           var skip = overlay.querySelector('.site-intro__skip');
@@ -305,43 +212,8 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
             images[i].addEventListener('error', dismiss);
           }
 
+          holdTimer = setTimeout(dismiss, HOLD_MS);
           safetyTimer = setTimeout(dismiss, SAFETY_MS);
-
-          if (!video) {
-            startPaper();
-            return;
-          }
-
-          function scheduleLandscape(durationSec) {
-            clearTimeout(landscapeTimer);
-            var ms = LANDSCAPE_DEFAULT_MS;
-            if (typeof durationSec === 'number' && isFinite(durationSec) && durationSec > 0) {
-              var clipMs = durationSec * 1000;
-              ms = clipMs <= LANDSCAPE_MAX_MS + 400 ? clipMs : LANDSCAPE_DEFAULT_MS;
-              if (ms > LANDSCAPE_MAX_MS) ms = LANDSCAPE_MAX_MS;
-              if (ms < 1800) ms = Math.max(clipMs, 1800);
-            }
-            landscapeTimer = setTimeout(startPaper, ms);
-          }
-
-          video.addEventListener('error', startPaper);
-          video.addEventListener('ended', startPaper);
-          video.addEventListener('playing', function () {
-            landscapePlayed = true;
-          });
-          video.addEventListener('loadedmetadata', function () {
-            scheduleLandscape(video.duration);
-          });
-
-          failTimer = setTimeout(function () {
-            if (!paperStarted && video && video.readyState < 1) startPaper();
-          }, VIDEO_FAIL_MS);
-
-          scheduleLandscape();
-          var playAttempt = video.play();
-          if (playAttempt && playAttempt.catch) {
-            playAttempt.catch(startPaper);
-          }
         }
 
         bootIntro();

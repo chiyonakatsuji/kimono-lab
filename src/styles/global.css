@@ -71,10 +71,10 @@
   background-color: var(--color-paper-dim);
 }
 
-/* Session intro: optional landscape, paper, the lockup, a short hold,
-   then a quiet fade. Visibility is gated by html[data-intro], set in
-   <head> before first paint. The landscape file is a drop-in at
-   public/intro-landscape.mp4 — until it exists, the sequence is paper only. */
+/* Session intro: paper, the lockup, a short hold, then a quiet fade
+   into the page already underneath. Visibility is gated by
+   html[data-intro], set in <head> before first paint. Landscape is
+   the homepage hero — not part of this overlay. */
 .site-intro {
   display: none;
   position: fixed;
@@ -101,34 +101,7 @@ html[data-intro='pending'] .site-intro,
   pointer-events: none;
 }
 
-.site-intro__landscape {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background-color: var(--color-paper);
-  opacity: 1;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.site-intro__video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  background-color: var(--color-paper);
-}
-
-.site-intro.is-paper .site-intro__landscape,
-.site-intro.is-leaving .site-intro__landscape {
-  opacity: 0;
-  pointer-events: none;
-}
-
 .site-intro__mark {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -147,26 +120,16 @@ html[data-intro='pending'] .site-intro,
   flex-shrink: 0;
   opacity: 0;
   transform: scale(0.98);
+  animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .site-intro__kl {
   height: 5.25rem;
+  animation-delay: 0.2s;
 }
 
 .site-intro__word {
   height: 2.5rem;
-}
-
-.site-intro.is-paper .site-intro__kl,
-.site-intro.is-paper .site-intro__word {
-  animation: site-intro-mark 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.site-intro.is-paper .site-intro__kl {
-  animation-delay: 0.2s;
-}
-
-.site-intro.is-paper .site-intro__word {
   animation-delay: 0.85s;
 }
 
@@ -212,6 +175,109 @@ html[data-intro='pending'] .site-intro,
   color: var(--color-sumi);
 }
 
+/* Homepage: the landscape is the first screen of the site, after the
+   paper lockup dismisses. Header sits on the video; piece pages stay
+   gallery-first and do not use this. */
+body.is-home > header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding-bottom: 2rem;
+  background: linear-gradient(
+    to bottom,
+    rgb(251 250 248 / 0.78) 0%,
+    rgb(251 250 248 / 0.32) 62%,
+    rgb(251 250 248 / 0) 100%
+  );
+}
+
+body.is-home > header .label {
+  color: var(--color-ink);
+}
+
+body.is-home > header .label:hover,
+body.is-home > header .label:focus-visible {
+  color: var(--color-sumi);
+}
+
+.home-hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-sumi);
+}
+
+.home-hero__media {
+  position: absolute;
+  inset: 0;
+}
+
+.home-hero__video,
+.home-hero__poster {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.home-hero__overlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 5rem 2rem 3.25rem;
+  background: linear-gradient(
+    to top,
+    rgb(26 23 20 / 0.48) 0%,
+    rgb(26 23 20 / 0.08) 42%,
+    transparent 68%
+  );
+}
+
+@media (min-width: 640px) {
+  .home-hero__overlay {
+    padding: 5rem 3.5rem 4rem;
+  }
+}
+
+.home-hero__wordmark {
+  display: block;
+  height: 2.15rem;
+  width: auto;
+  margin-bottom: 1.25rem;
+  filter: brightness(0) invert(1);
+}
+
+@media (min-width: 640px) {
+  .home-hero__wordmark {
+    height: 2.55rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.home-hero__lead {
+  max-width: 22rem;
+  color: var(--color-paper);
+  font-size: 1.5rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 640px) {
+  .home-hero__lead {
+    max-width: 28rem;
+    font-size: 1.875rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -221,5 +287,13 @@ html[data-intro='pending'] .site-intro,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .home-hero__video {
+    display: none;
+  }
+
+  .home-hero__poster {
+    display: block;
   }
 }

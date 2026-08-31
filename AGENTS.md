@@ -195,12 +195,9 @@ not source.
 - [ ] Two unused videos in `public/video/` (`clothes-animation.mp4`,
       `kimono-lab.mp4`) are the old line-drawing / clothes-scribble intros —
       do **not** use them as the landscape beat.
-- [ ] Intro landscape slot: drop a muted clip at `public/intro-landscape.mp4`
-      (optional `.webm`). Until that file exists, the intro is paper + lockup
-      only. Wanted: 3–6s of quiet Japanese garden / architecture / season,
-      16:9 or wider, 720p or 1080p H.264 +faststart, no 9:16 letterbox, no
-      travel vlog, no stock Kyoto. The atelier does not currently have owned
-      landscape footage in OneDrive or `public/`.
+- [x] Homepage hero landscape lives at `public/hero-landscape.mp4` (optional
+      `.webm` + poster `.jpg`). The intro overlay is paper + KL lockup only —
+      do not put the landscape clip in the intro.
 
 ---
 
