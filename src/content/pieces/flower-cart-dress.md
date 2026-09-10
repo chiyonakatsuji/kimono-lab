@@ -2,13 +2,15 @@
 # SECOND PIECE, identified from the lookbook shoot (frames 1 and 7).
 # The name, era and region are all provisional — the atelier names its own
 # pieces, and this one was described from the photographs alone.
+# Marked sold from the Instagram Sold highlight story (SOLD OUT overlay).
 order: 2
 photo: ../../assets/lookbook/1.jpg
 gallery:
   - ../../assets/lookbook/2-1.jpg
   - ../../assets/lookbook/7.jpg
   - ../../assets/lookbook/8.jpg
-available: true
+  - ../../assets/pieces/flower-cart-dress-sold-story.jpg
+available: false
 draft: false
 
 provenance:

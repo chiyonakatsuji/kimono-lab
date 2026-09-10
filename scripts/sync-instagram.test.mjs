@@ -182,6 +182,37 @@ console.log('\nsold marker kept out of the name');
   check('still detected as sold', () => assert.equal(r.sold, true));
 }
 
+console.log('\nsold status as its own first line');
+{
+  const r = parseCaption('SOLD OUT\nTOMESODE Vネックドレス\nTOMESODE V Neck Dress');
+  check('name is the garment line, not SOLD OUT', () =>
+    assert.equal(r.name, 'TOMESODE Vネックドレス'));
+  check('out of stock counts as sold', () =>
+    assert.equal(parseCaption('Out Of STOCK\nKomon Camisole Dress').sold, true));
+  check('leading SOLD on the name line is stripped', () =>
+    assert.equal(parseCaption('SOLD 黒留ストール刺繍\n黒に咲く。').name, '黒留ストール刺繍'));
+}
+
+console.log('\nher abbreviations for cloth');
+{
+  check('黒留 reads as tomesode', () =>
+    assert.equal(parseCaption('黒留ストール\n菊の文様。').provenance.clothKey, 'tomesode'));
+  check('羽織ストール reads as haori', () =>
+    assert.equal(parseCaption('羽織ストール(金)\nHaori Stole (Gold)').provenance.clothKey, 'haori'));
+}
+
+console.log('\nin-stock status and named motifs from later captions');
+{
+  const r = parseCaption('振袖ボートネックドレス In Stock Size Free(S-L)\n御所車に流水文様');
+  check('In Stock dropped from the name', () =>
+    assert.equal(r.name, '振袖ボートネックドレス'));
+  check('御所車 beats 流水', () => assert.equal(r.provenance.motifKey, 'goshoguruma'));
+  check('貝桶 is a motif', () =>
+    assert.equal(parseCaption('留袖ドレス\n貝桶に色紙・四季花文様').provenance.motifKey, 'kaioke'));
+  check('流水 is a motif when named alone', () =>
+    assert.equal(parseCaption('振袖ドレス\n流水文を基調に').provenance.motifKey, 'ryusui'));
+}
+
 // ---------------------------------------------------------------------------
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

@@ -2,11 +2,11 @@
 import fs from 'node:fs';
 import nodePath from 'node:path';
 import { Image } from 'astro:assets';
-import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import PieceCard from '../../components/PieceCard.astro';
 import { useTranslations, path, languages, withBase, type Lang } from '../../i18n/ui';
 import { STOCKISTS } from '../../lib/site';
+import { getPieces } from '../../lib/facets';
 
 export function getStaticPaths() {
   return (Object.keys(languages) as Lang[]).map((lang) => ({ params: { lang } }));
@@ -15,9 +15,7 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
 
-const pieces = (await getCollection('pieces', ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+const pieces = await getPieces({ available: true });
 
 const [featured, ...rest] = pieces;
 
@@ -182,21 +180,21 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
     })();
   </script>
 
-  <div id="home-site" class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-24 sm:pt-32 pb-8">
+  <div id="home-site" class="frame pt-44 sm:pt-56 lg:pt-72 pb-4">
     <h1 class="home-site__lead">{t('home.hero.lead')}</h1>
   </div>
   {
     featured && (
-      <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-16 sm:pt-24">
+      <section class="frame pt-36 sm:pt-48 lg:pt-60">
         <a href={path(lang, 'pieces', featured.id)} class="group block">
           <Image
             src={featured.data.photo}
             alt={featured.data[lang].alt}
             widths={[720, 1100, 1600]}
-            sizes="(min-width: 1024px) 62vw, 100vw"
-            class="w-full max-w-3xl h-auto bg-paper-dim"
+            sizes="(min-width: 1024px) 48vw, 100vw"
+            class="w-full max-w-2xl sm:max-w-3xl h-auto bg-paper-dim"
           />
-          <div class="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-2">
+          <div class="mt-12 flex flex-wrap items-baseline gap-x-10 gap-y-3">
             <h2 class="text-base text-sumi group-hover:text-ai transition-colors">
               {featured.data[lang].name}
             </h2>
@@ -215,8 +213,8 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
   {/* ---------- Remaining pieces ---------- */}
   {
     rest.length > 0 && (
-      <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-40">
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
+      <section class="frame pt-48 sm:pt-56 lg:pt-64">
+        <div class="piece-grid">
           {rest.slice(0, 6).map((piece) => (
             <PieceCard piece={piece} lang={lang} />
           ))}
@@ -226,16 +224,16 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
   }
 
   {/* ---------- Atelier ---------- */}
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-40">
+  <section class="frame pt-48 sm:pt-56 lg:pt-64">
     <p class="label">{t('home.about.heading')}</p>
-    <p class="mt-8 max-w-xl text-lg leading-[2] text-ink">
+    <p class="mt-10 max-w-md text-lg leading-[2.15] text-ink">
       {
         lang === 'ja'
           ? '《ここにアトリエの紹介文が入ります。お母様の言葉に差し替えてください。》'
           : '(Placeholder — a short introduction to the atelier goes here, in your mother’s words.)'
       }
     </p>
-    <div class="mt-10 flex gap-10">
+    <div class="mt-14 flex gap-12">
       <a href={path(lang, 'about')} class="label hover:text-sumi transition-colors">
         {t('home.about.more')}
       </a>
@@ -247,15 +245,15 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
 
   {/* ---------- Stockists: the hotel boutiques are a trust signal, so they
        belong on the homepage rather than buried on Contact. ---------- */}
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-40">
+  <section class="frame pt-48 sm:pt-56 lg:pt-64">
     <p class="label">{t('stockists.heading')}</p>
-    <ul class="mt-8 flex flex-wrap gap-x-12 gap-y-3">
+    <ul class="mt-10 flex flex-wrap gap-x-16 gap-y-4">
       {STOCKISTS.map((shop) => <li class="text-ink">{shop.name[lang]}</li>)}
     </ul>
-    <p class="note mt-8">{t('stockists.shipping')}</p>
+    <p class="note mt-12">{t('stockists.shipping')}</p>
     <a
       href={path(lang, 'contact')}
-      class="label mt-10 inline-block hover:text-sumi transition-colors"
+      class="label mt-14 inline-block hover:text-sumi transition-colors"
     >
       {t('nav.contact')}
     </a>

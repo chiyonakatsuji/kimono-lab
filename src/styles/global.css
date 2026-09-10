@@ -64,6 +64,46 @@
   line-height: 1.9;
 }
 
+/* The page's paper margin. Luxury here is empty ground, not a rule. */
+.frame {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 88rem;
+  padding-inline: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .frame {
+    padding-inline: 5.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .frame {
+    padding-inline: 8rem;
+  }
+}
+
+/* Lookbook rhythm: more paper between garments than between words. */
+.piece-grid {
+  display: grid;
+  gap: 7rem 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .piece-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8.5rem 3.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .piece-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10rem 5rem;
+  }
+}
+
 /* Side-by-side photographs share one frame. 2:3 is the lookbook ratio.
    Wider or taller sources are cropped to that box so row heights match —
    never letterboxed or shrunk. Focus sits slightly above centre: side-crops
@@ -74,6 +114,93 @@
   object-fit: cover;
   object-position: center 40%;
   background-color: var(--color-paper-dim);
+}
+
+/* Piece page: the large photograph swaps when a thumb is chosen, or
+   when the visitor swipes the stage. No arrows, no frame around the current
+   thumb — opacity is enough. */
+.piece-photos__stage {
+  display: grid;
+  background-color: var(--color-paper-dim);
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.piece-photos__stage:focus {
+  outline: none;
+}
+
+.piece-photos__stage:focus-visible {
+  outline: 1px solid var(--color-ink-soft);
+  outline-offset: 6px;
+}
+
+.piece-photos__slide {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.piece-photos__slide.is-current {
+  position: relative;
+  z-index: 1;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.piece-photos__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.piece-photos__thumbs {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .piece-photos__thumbs {
+    gap: 2rem;
+    grid-template-columns: repeat(var(--thumbs, 3), minmax(0, 1fr));
+  }
+}
+
+.piece-photos__thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.piece-photos__thumb[aria-current='true'],
+.piece-photos__thumb:hover,
+.piece-photos__thumb:focus-visible {
+  opacity: 1;
+}
+
+.piece-photos__thumb:focus {
+  outline: none;
+}
+
+.piece-photos__thumb:focus-visible {
+  outline: 1px solid var(--color-ink-soft);
+  outline-offset: 4px;
+}
+
+.piece-photos__thumb .photo-frame {
+  pointer-events: none;
 }
 
 /* Session intro: paper, the lockup, a short hold, then a quiet fade
@@ -108,8 +235,8 @@ html[data-intro='done'] .site-intro {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
-  padding: 0 2rem;
+  gap: 2.75rem;
+  padding: 0 2.5rem;
   overflow: visible;
 }
 
@@ -140,7 +267,7 @@ html[data-intro='done'] .site-intro {
 
 @media (min-width: 640px) {
   .site-intro__mark {
-    gap: 2.35rem;
+    gap: 3.25rem;
   }
 
   .site-intro__kl {
@@ -300,14 +427,18 @@ html[data-intro='done'] .home-gate__arrow.is-ready {
 .home-site__lead {
   max-width: 22rem;
   color: var(--color-sumi);
-  font-size: 1.5rem;
-  line-height: 1.7;
+  font-size: 1.375rem;
+  line-height: 2.05;
+  /* Keep を。 with 時間, even though :lang(ja) otherwise allows a break there. */
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-break: auto;
 }
 
 @media (min-width: 640px) {
   .home-site__lead {
-    max-width: 28rem;
-    font-size: 1.875rem;
+    max-width: 24em;
+    font-size: 1.625rem;
   }
 }
 
@@ -323,7 +454,7 @@ html[data-intro='done'] .home-gate__arrow.is-ready {
 }
 
 header .logo-wordmark {
-  --logo-h: 3.25rem;
+  --logo-h: 2.6rem;
 }
 
 @media (min-width: 640px) {

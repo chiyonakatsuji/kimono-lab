@@ -14,8 +14,13 @@ export interface FacetGroup {
 }
 
 /** All published pieces, in display order. */
-export async function getPieces(): Promise<Piece[]> {
-  const pieces = await getCollection('pieces', ({ data }) => !data.draft);
+export async function getPieces(opts?: { available?: boolean }): Promise<Piece[]> {
+  const pieces = await getCollection('pieces', ({ data }) => {
+    if (data.draft) return false;
+    if (opts?.available === true) return data.available !== false;
+    if (opts?.available === false) return data.available === false;
+    return true;
+  });
   return pieces.sort((a, b) => a.data.order - b.data.order);
 }
 

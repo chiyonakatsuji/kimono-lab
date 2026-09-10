@@ -15,13 +15,13 @@ const linkClass =
 ---
 
 <Layout lang={lang} title={t('contact.heading')} description={t('contact.intro')}>
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+  <section class="frame">
     <p class="label">{t('contact.heading')}</p>
-    <p class="mt-12 max-w-xl text-lg leading-[2] text-ink">{t('contact.intro')}</p>
+    <p class="mt-16 max-w-md text-lg leading-[2.15] text-ink">{t('contact.intro')}</p>
 
     {/* Instagram DM is how the atelier already takes enquiries, so it is the
         primary route rather than a form we would have to host. */}
-    <div class="mt-16">
+    <div class="mt-20">
       <p class="note">{t('contact.dm')}</p>
       <a
         href={INSTAGRAM_URL}
@@ -46,11 +46,11 @@ const linkClass =
     }
 
     {/* ---------- Stockists ---------- */}
-    <div class="mt-40">
+    <div class="mt-48 sm:mt-56">
       <p class="label">{t('stockists.heading')}</p>
-      <p class="mt-8 max-w-xl leading-[2] text-ink">{t('stockists.intro')}</p>
+      <p class="mt-10 max-w-md leading-[2.15] text-ink">{t('stockists.intro')}</p>
 
-      <ul class="mt-10 space-y-4">
+      <ul class="mt-14 space-y-6">
         {
           STOCKISTS.map((shop) => (
             <li>
@@ -61,7 +61,7 @@ const linkClass =
         }
       </ul>
 
-      <p class="note mt-12">{t('stockists.shipping')}</p>
+      <p class="note mt-16">{t('stockists.shipping')}</p>
     </div>
   </section>
 </Layout>

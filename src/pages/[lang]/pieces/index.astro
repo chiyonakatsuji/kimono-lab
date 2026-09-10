@@ -11,7 +11,7 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
 
-const pieces = await getPieces();
+const pieces = await getPieces({ available: true });
 const cloths = groupBy(pieces, 'cloth');
 const motifs = groupBy(pieces, 'motif');
 
@@ -20,18 +20,18 @@ const showFacets = pieces.length > 2;
 ---
 
 <Layout lang={lang} title={t('pieces.heading')} description={t('pieces.intro')}>
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+  <section class="frame">
     <p class="label">{t('pieces.heading')}</p>
-    <p class="mt-8 max-w-lg text-lg leading-[2] text-ink">{t('pieces.intro')}</p>
+    <p class="mt-10 max-w-md text-lg leading-[2.15] text-ink">{t('pieces.intro')}</p>
   </section>
 
   {
     showFacets && (
-      <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-20">
-        <div class="grid sm:grid-cols-2 gap-12 max-w-3xl">
+      <section class="frame pt-28 sm:pt-36">
+        <div class="grid sm:grid-cols-2 gap-16 sm:gap-24 max-w-2xl">
           <div>
             <p class="label">{t('pieces.byCloth')}</p>
-            <ul class="mt-5 space-y-2">
+            <ul class="mt-7 space-y-3">
               {cloths.map((group) => (
                 <li>
                   <a
@@ -48,7 +48,7 @@ const showFacets = pieces.length > 2;
 
           <div>
             <p class="label">{t('pieces.byMotif')}</p>
-            <ul class="mt-5 space-y-2">
+            <ul class="mt-7 space-y-3">
               {motifs.map((group) => (
                 <li>
                   <a
@@ -67,8 +67,8 @@ const showFacets = pieces.length > 2;
     )
   }
 
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-28">
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
+  <section class="frame pt-36 sm:pt-48">
+    <div class="piece-grid">
       {pieces.map((piece, i) => <PieceCard piece={piece} lang={lang} eager={i === 0} />)}
     </div>
   </section>

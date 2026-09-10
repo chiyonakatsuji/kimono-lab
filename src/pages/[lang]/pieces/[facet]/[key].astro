@@ -9,7 +9,7 @@ import { useTranslations, path, languages, type Lang } from '../../../../i18n/ui
  * One route covers both facets.
  */
 export async function getStaticPaths() {
-  const pieces = await getPieces();
+  const pieces = await getPieces({ available: true });
   const facets: Facet[] = ['cloth', 'motif'];
 
   return (Object.keys(languages) as Lang[]).flatMap((lang) =>
@@ -31,22 +31,22 @@ const facetLabel = facet === 'cloth' ? t('piece.cloth') : t('piece.motif');
 ---
 
 <Layout lang={lang} title={heading} description={`${facetLabel} — ${heading}`}>
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14">
+  <section class="frame">
     <p class="label">{facetLabel}</p>
-    <h1 class="mt-8 text-2xl sm:text-3xl leading-[1.7] text-sumi">{heading}</h1>
-    <p class="label mt-6">
+    <h1 class="mt-10 text-2xl sm:text-3xl leading-[1.85] text-sumi">{heading}</h1>
+    <p class="label mt-8">
       {group.pieces.length}{lang === 'ja' ? t('pieces.count') : ` ${t('pieces.count')}`}
     </p>
     <a
       href={path(lang, 'pieces')}
-      class="label mt-10 inline-block hover:text-sumi transition-colors"
+      class="label mt-14 inline-block hover:text-sumi transition-colors"
     >
       ← {t('piece.back')}
     </a>
   </section>
 
-  <section class="mx-auto max-w-[88rem] px-8 sm:px-14 pt-24">
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
+  <section class="frame pt-28 sm:pt-36">
+    <div class="piece-grid">
       {group.pieces.map((piece, i) => <PieceCard piece={piece} lang={lang} eager={i === 0} />)}
     </div>
   </section>

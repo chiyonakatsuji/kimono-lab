@@ -1,8 +1,8 @@
 ---
-import { Image } from 'astro:assets';
 import Layout from '../../../layouts/Layout.astro';
 import PieceCard from '../../../components/PieceCard.astro';
-import { getPieces, relatedTo } from '../../../lib/facets';
+import PiecePhotos from '../../../components/PiecePhotos.astro';
+import { getPieces, relatedTo, groupBy } from '../../../lib/facets';
 import { useTranslations, path, languages, type Lang } from '../../../i18n/ui';
 
 export async function getStaticPaths() {
@@ -25,79 +25,69 @@ const prov = piece.data.provenance;
 // Authored as plain paragraphs separated by blank lines.
 const paragraphs = text.story.trim().split(/\n\s*\n/);
 
+const relatedPool = pieces.filter((p) => p.data.available === piece.data.available);
+const sameCloth = relatedTo(piece, relatedPool, 'cloth');
+const sameMotif = relatedTo(piece, relatedPool, 'motif');
+
+const catalogue = pieces.filter((p) => p.data.available !== false);
+const clothPages = new Set(groupBy(catalogue, 'cloth').map((g) => g.key));
+const motifPages = new Set(groupBy(catalogue, 'motif').map((g) => g.key));
+
 // Provenance rows. Cloth and motif link out to everything sharing them, unless
 // the value is the sync script's "unspecified" placeholder. Provenance is
-// absent entirely on some Instagram-synced pieces.
+// absent entirely on some Instagram-synced pieces. Facet URLs only exist for
+// available pieces, so sold archive entries do not link to empty / 404 pages.
 const linkable = (key: string) => key !== 'unspecified';
 const rows = prov
   ? [
       {
         label: t('piece.cloth'),
         value: prov.cloth[lang],
-        href: linkable(prov.clothKey) ? path(lang, 'pieces', 'cloth', prov.clothKey) : null,
+        href: linkable(prov.clothKey) && clothPages.has(prov.clothKey)
+          ? path(lang, 'pieces', 'cloth', prov.clothKey)
+          : null,
       },
       {
         label: t('piece.motif'),
         value: prov.motif[lang],
-        href: linkable(prov.motifKey) ? path(lang, 'pieces', 'motif', prov.motifKey) : null,
+        href: linkable(prov.motifKey) && motifPages.has(prov.motifKey)
+          ? path(lang, 'pieces', 'motif', prov.motifKey)
+          : null,
       },
       ...(prov.era ? [{ label: t('piece.era'), value: prov.era[lang], href: null }] : []),
       ...(prov.region ? [{ label: t('piece.region'), value: prov.region[lang], href: null }] : []),
       ...(prov.meaning ? [{ label: t('piece.meaning'), value: prov.meaning[lang], href: null }] : []),
     ]
   : [];
-
-const sameCloth = relatedTo(piece, pieces, 'cloth');
-const sameMotif = relatedTo(piece, pieces, 'motif');
-
-const galleryCount = piece.data.gallery.length;
-const galleryCols =
-  galleryCount <= 1 ? 'grid-cols-1' : galleryCount === 2 ? 'grid-cols-2' : 'grid-cols-3';
 ---
 
-<Layout lang={lang} title={text.name} description={prov.cloth[lang]}>
-  <article class="mx-auto max-w-[88rem] px-8 sm:px-14">
-    <a href={path(lang, 'pieces')} class="label hover:text-sumi transition-colors">
-      ← {t('piece.back')}
+<Layout lang={lang} title={text.name} description={prov?.cloth[lang] ?? text.alt}>
+  <article class="frame">
+    <a
+      href={piece.data.available === false ? path(lang, 'about') : path(lang, 'pieces')}
+      class="label hover:text-sumi transition-colors"
+    >
+      ← {piece.data.available === false ? t('nav.about') : t('piece.back')}
     </a>
 
-    <div class="mt-14 grid lg:grid-cols-[1.15fr_1fr] gap-16 lg:gap-28 items-start">
+    <div class="mt-16 grid lg:grid-cols-[1.05fr_1fr] gap-20 lg:gap-36 items-start">
       {/* ---------- Photographs ---------- */}
       <div>
-        <Image
-          src={piece.data.photo}
+        <PiecePhotos
+          lang={lang}
           alt={text.alt}
-          widths={[720, 1100, 1600]}
-          sizes="(min-width: 1024px) 55vw, 100vw"
-          class="w-full h-auto bg-paper-dim"
-          loading="eager"
+          photo={piece.data.photo}
+          gallery={piece.data.gallery}
         />
-
-        {
-          piece.data.gallery.length > 0 && (
-            <div class:list={['mt-10 grid gap-6', galleryCols]}>
-              {piece.data.gallery.map((img) => (
-                <Image
-                  src={img}
-                  alt=""
-                  widths={[320, 640]}
-                  sizes="28vw"
-                  class="photo-frame"
-                  loading="lazy"
-                />
-              ))}
-            </div>
-          )
-        }
       </div>
 
       {/* ---------- Text ---------- */}
       <div class="lg:sticky lg:top-14">
         <p class="label">{t('piece.oneOfAKind')}</p>
-        <h1 class="mt-6 text-2xl sm:text-3xl leading-[1.6] text-sumi">{text.name}</h1>
+        <h1 class="mt-8 text-2xl sm:text-3xl leading-[1.75] text-sumi">{text.name}</h1>
 
         {/* Provenance — the organising idea of the site. */}
-        <dl class="mt-14 space-y-5">
+        <dl class="mt-16 space-y-6">
           {
             rows.map((row: { label: string; value: string; href: string | null }) => (
               <div class="grid grid-cols-[5.5rem_1fr] gap-6 items-baseline">
@@ -116,11 +106,11 @@ const galleryCols =
           }
         </dl>
 
-        <div class="mt-14 space-y-6 leading-[2] text-ink">
+        <div class="mt-16 space-y-8 leading-[2.15] text-ink">
           {paragraphs.map((p) => <p>{p}</p>)}
         </div>
 
-        <div class="mt-16">
+        <div class="mt-20">
           <p class="label">
             {piece.data.available ? t('piece.status.available') : t('piece.status.sold')}
           </p>
@@ -162,9 +152,9 @@ const galleryCols =
       ]
         .filter((section) => section.items.length > 0)
         .map((section) => (
-          <section class="pt-40">
+          <section class="pt-48 sm:pt-56 lg:pt-64">
             <p class="label">{section.heading}</p>
-            <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-24">
+            <div class="mt-14 piece-grid">
               {section.items.slice(0, 3).map((p) => (
                 <PieceCard piece={p} lang={lang} />
               ))}

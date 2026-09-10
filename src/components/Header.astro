@@ -27,14 +27,14 @@ const current = withBase(pathname).replace(/\/$/, '');
 <!-- No bottom border: the space below does the separating.
      `w-full` matters: body is a flex column, and `mx-auto` alone would cancel
      the default stretch and shrink the header to its content width. -->
-<header class="mx-auto max-w-[88rem] w-full px-8 sm:px-14 pt-10 pb-16 sm:pt-14">
-  <div class="flex items-center justify-between gap-8">
+<header class="frame w-full pt-12 pb-16 sm:pt-16 sm:pb-24">
+  <div class="flex flex-col items-start gap-10 sm:flex-row sm:items-center sm:justify-between sm:gap-12">
     <a href={path(lang)} class="shrink-0">
       <Wordmark alt="KIMONO.LAB JAPAN" />
       <span class="sr-only">— {t('site.tagline')}</span>
     </a>
 
-    <nav aria-label="Main" class="flex items-center gap-7 sm:gap-11">
+    <nav aria-label="Main" class="flex items-center gap-7 sm:gap-14">
       {
         links.map((link) => {
           const active = current === link.href.replace(/\/$/, '');

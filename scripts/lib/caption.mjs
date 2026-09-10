@@ -24,7 +24,8 @@ const CLOTHS = [
   { key: 'komon', test: /小紋|こもん|komon/i, ja: '小紋（こもん）', en: 'Komon — small-pattern silk kimono' },
   { key: 'furisode', test: /振袖|ふりそで|furisode/i, ja: '振袖（ふりそで）', en: 'Furisode — long-sleeved formal silk' },
   { key: 'houmongi', test: /訪問着|houmongi|h(?:ō|o)mongi/i, ja: '訪問着', en: 'Hōmongi — formal visiting kimono' },
-  { key: 'tomesode', test: /留袖|tomesode/i, ja: '留袖', en: 'Tomesode — crested formal kimono' },
+  { key: 'tomesode', test: /留袖|黒留|tomesode|kurotomesode/i, ja: '留袖', en: 'Tomesode — crested formal kimono' },
+  { key: 'haori', test: /羽織|haori/i, ja: '羽織', en: 'Haori — kimono jacket cloth' },
   { key: 'obi', test: /(^|[^\w])帯([^\w]|$)|\bobi\b/i, ja: '帯', en: 'Obi — sash cloth' },
   { key: 'yukata', test: /浴衣|ゆかた|yukata/i, ja: '浴衣', en: 'Yukata — cotton' },
   // Deliberately last: the general term, used when nothing specific matched.
@@ -43,6 +44,8 @@ const MOTIFS = [
   { key: 'hanaguruma', test: /花車|hanaguruma|flower cart/i, ja: '花車', en: 'Flower cart' },
   { key: 'takara', test: /宝尽くし|宝尽し|takara/i, ja: '宝尽くし', en: 'Takara-zukushi — assembled treasures' },
   { key: 'goshoguruma', test: /御所車|goshoguruma/i, ja: '御所車', en: 'Imperial carriage' },
+  { key: 'kaioke', test: /貝桶|kaioke/i, ja: '貝桶', en: 'Kaioke — ceremonial shell box' },
+  { key: 'ryusui', test: /流水|ry(?:ū|u)sui|flowing water/i, ja: '流水', en: 'Flowing water' },
   { key: 'tsuru', test: /鶴|crane/i, ja: '鶴', en: 'Crane' },
   { key: 'matsu', test: /松|pine/i, ja: '松', en: 'Pine' },
   { key: 'take', test: /竹|bamboo/i, ja: '竹', en: 'Bamboo' },
@@ -64,14 +67,22 @@ const MOTIFS = [
   },
 ];
 
-const SOLD = /sold\s*out|sold|売却|ご成約|完売|お買い上げ|受注済/i;
+const SOLD = /sold\s*out|sold|売却|ご成約|完売|お買い上げ|受注済|out\s*of\s*stock/i;
+
+/** A line that is only a stock status, not a garment name. */
+const STATUS_LINE =
+  /^(?:sold(?:\s*out)?|out\s*of\s*stock|売却|ご成約|完売|お買い上げ|受注済)[\s.。!！]*$/i;
+
+/** "SOLD 黒留ストール" — status glued to the front of the name line. */
+const LEADING_STATUS =
+  /^(?:sold(?:\s*out)?|out\s*of\s*stock)[\s　:：\-–—]+/i;
 
 /**
  * Spec and status text appended to the name line — sizes, model height, price,
  * sold markers. Useful to a shopper, but none of it is part of a garment's name.
  */
 const NAME_NOISE =
-  /[\s　]*(?:[|｜/／][\s　]*)?(?:sizes?\b|sold\s*out\b|sold\b|model\s+\d|colors?\b|サイズ|完売|ご成約|受注済|価格|着丈|身丈|[¥￥]).*$/i;
+  /[\s　]*(?:[|｜/／][\s　]*)?(?:sizes?\b|in\s*stock\b|sold\s*out\b|sold\b|model\s+\d|colors?\b|サイズ|完売|ご成約|受注済|価格|着丈|身丈|[¥￥]).*$/i;
 
 /** Heading of a photo or model credit block. Never part of a garment's story. */
 const CREDIT_HEADER =
@@ -204,13 +215,14 @@ export function extractName(caption) {
   const first = stripMentions(stripHashtags(caption))
     .split('\n')
     .map((l) => l.trim())
-    .filter(Boolean)[0];
+    .filter((l) => l && !STATUS_LINE.test(l))[0];
   if (!first) return null;
   return (
     first
       // Drop leading decoration and emoji.
       .replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\s◆■●○▼▽・\-–—]+/u, '')
       .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]+/gu, '')
+      .replace(LEADING_STATUS, '')
       .replace(NAME_NOISE, '')
       .replace(/\s{2,}/g, ' ')
       .trim()

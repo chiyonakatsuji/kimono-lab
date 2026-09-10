@@ -50,6 +50,8 @@ export const ui = {
     'piece.seeAlsoCloth': '同じ生地の作品',
     'piece.seeAlsoMotif': '同じ文様の作品',
     'piece.viewOnInstagram': 'Instagramの投稿を見る',
+    'piece.photos': '写真',
+    'piece.showPhoto': 'この写真を大きく見る',
     'contact.heading': 'お問い合わせ',
     'contact.intro':
       '作品のご相談、お持ちの着物のお仕立て直しについて、お気軽にご連絡ください。',
@@ -68,6 +70,8 @@ export const ui = {
     skip: '本文へ移動',
     'intro.skip': 'スキップ',
     'home.scroll': '風景を見る',
+    'about.archive': 'これまでの作品',
+    'about.archiveLead': 'お仕立て済みの一点物です。',
   },
   en: {
     'site.tagline': 'Your Beauty, Your Story',
@@ -101,6 +105,8 @@ export const ui = {
     'piece.seeAlsoCloth': 'Same cloth',
     'piece.seeAlsoMotif': 'Same motif',
     'piece.viewOnInstagram': 'View the original post',
+    'piece.photos': 'Photographs',
+    'piece.showPhoto': 'View this photograph large',
     'contact.heading': 'Contact',
     'contact.intro':
       'For enquiries about a piece, or about remaking a kimono you already own, please do get in touch.',
@@ -119,6 +125,8 @@ export const ui = {
     skip: 'Skip to content',
     'intro.skip': 'Skip',
     'home.scroll': 'See the landscape',
+    'about.archive': 'Previous pieces',
+    'about.archiveLead': 'One-of-a-kind pieces, already made up.',
   },
 } as const satisfies Record<Lang, Record<string, string>>;
 
