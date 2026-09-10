@@ -89,7 +89,7 @@ const pathWithoutLang = stripBase(Astro.url.pathname).replace(/^\/(ja|en)/, '');
     </style>
   </head>
 
-  <body class:list={['min-h-screen flex flex-col', home && 'is-home']}>
+  <body class:list={['min-h-screen flex flex-col', home && 'is-home']} data-build="2026-09-10b">
     <!-- Paper lockup only: KL → wordmark → fade onto the white landing. -->
     <div id="site-intro" class="site-intro" data-home={home ? '1' : undefined}>
       <div class="site-intro__mark" aria-hidden="true">

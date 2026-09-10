@@ -131,7 +131,8 @@ const heroPosterSrc = withBase('/hero-landscape.jpg');
           }
         }
 
-        var showSite = p > 0.92;
+        var gateBottom = track.getBoundingClientRect().bottom;
+        var showSite = gateBottom <= 0;
         if (showSite !== site) {
           site = showSite;
           document.body.classList.toggle('is-site', site);

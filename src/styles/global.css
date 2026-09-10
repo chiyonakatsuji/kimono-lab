@@ -96,14 +96,12 @@ html[data-intro='pending'] {
   overflow: hidden;
 }
 
-html[data-intro='pending'] .site-intro,
-.site-intro.is-leaving {
+html[data-intro='pending'] .site-intro {
   display: flex;
 }
 
-.site-intro.is-leaving {
-  opacity: 0;
-  pointer-events: none;
+html[data-intro='done'] .site-intro {
+  display: none !important;
 }
 
 .site-intro__mark {
@@ -253,6 +251,13 @@ body.is-home.is-site > header {
   background-color: #fbfaf8;
   pointer-events: none;
   opacity: 1;
+}
+
+/* Never draw a lockup on the landscape, including leftover hero markup. */
+.home-hero__wordmark,
+.home-gate .logo-wordmark,
+.home-gate img.logo-wordmark {
+  display: none !important;
 }
 
 .home-gate__arrow {
